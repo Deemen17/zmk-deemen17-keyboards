@@ -17,3 +17,9 @@
 #     artifact-name: corne_left_with_logging
 #
 ---
+
+include:
+  - board: deow
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y
+    artifact-name: deow_studio

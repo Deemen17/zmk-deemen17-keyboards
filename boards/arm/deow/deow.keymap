@@ -26,7 +26,7 @@
         function_layer {
             bindings = <
     &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans      &trans  &trans  &trans  &trans
-    &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans      &trans  &trans  &trans  &trans
+    &rgb_ug RGB_TOG  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans      &trans  &trans  &trans  &trans
     &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans          &trans      &trans  &trans  &trans  &trans
     &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans      &trans  &trans  &trans  &trans
     &trans  &trans  &trans                          &trans                                  &trans  &trans  &trans          &trans      &trans  &trans  &trans

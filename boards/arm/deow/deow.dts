@@ -109,15 +109,18 @@ RC(4,0) RC(4,1) RC(4,2)                         RC(4,6)                         
         };
     };
 
-    // ext-power {
-    //     compatible = "zmk,ext-power-generic";
-    //     label = "EXT_POWER";
-    //     control-gpios = <&gpio1 9 GPIO_ACTIVE_HIGH>;
-    // };
+    ext-power {
+        compatible = "zmk,ext-power-generic";
+        label = "EXT_POWER";
+        control-gpios = <&gpio0 9 GPIO_ACTIVE_HIGH>;
+    };
 
     vbatt: vbatt {
-        compatible = "zmk,battery-nrf-vddh";
+        compatible = "zmk,battery-voltage-divider";
         label = "BATTERY";
+        io-channels = <&adc 2>;  
+		output-ohms = <2000000>;
+		full-ohms = <(2000000 + 820000)>;
     };
 
 };

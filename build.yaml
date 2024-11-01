@@ -22,4 +22,4 @@ include:
   - board: deow
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y
-    artifact-name: deow_studio
+    artifact-name: deemen17_deow_studio

@@ -138,5 +138,10 @@
 
         complete;
 
+        deow_all {
+            physical-layout = <&deow_all>;
+            positions = <>;
+        };
+
     };
 };

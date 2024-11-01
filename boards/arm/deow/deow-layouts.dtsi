@@ -1,7 +1,6 @@
 #include <physical_layouts.dtsi>
 / {
 
-
     // All
     deow_all: deow_all {
         compatible = "zmk,physical-layout";
@@ -131,9 +130,8 @@
         display-name = "Split Numpad Plus & 0";
 	transform = <&deow_ansi_split_numpad_transform>;
 
-*/
-
     };
+*/
 
     position_map {
         compatible = "zmk,physical-layout-position-map";

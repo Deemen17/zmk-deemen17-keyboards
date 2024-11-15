@@ -82,7 +82,6 @@
         , <&key_physical_attrs 100 100 1650  300       0     0     0>
         , <&key_physical_attrs 100 100 1750  300       0     0     0>
         , <&key_physical_attrs 100 100 1850  300       0     0     0>
-        , <&key_physical_attrs 100 200 1950  300       0     0     0>
         , <&key_physical_attrs 150 100    0  400       0     0     0>
         , <&key_physical_attrs 100 100  150  400       0     0     0>
         , <&key_physical_attrs 150 100  250  400       0     0     0>
@@ -94,6 +93,7 @@
         , <&key_physical_attrs 100 100 1650  400       0     0     0>
         , <&key_physical_attrs 100 100 1750  400       0     0     0>
         , <&key_physical_attrs 100 100 1850  400       0     0     0>
+        , <&key_physical_attrs 100 200 1950  300       0     0     0>
         ;
 
     };
@@ -177,7 +177,6 @@
         , <&key_physical_attrs 100 100 1650  300       0     0     0>
         , <&key_physical_attrs 100 100 1750  300       0     0     0>
         , <&key_physical_attrs 100 100 1850  300       0     0     0>
-        , <&key_physical_attrs 100 200 1950  300       0     0     0>
         , <&key_physical_attrs 150 100    0  400       0     0     0>
         , <&key_physical_attrs 100 100  150  400       0     0     0>
         , <&key_physical_attrs 150 100  250  400       0     0     0>
@@ -188,6 +187,7 @@
         , <&key_physical_attrs 100 100 1500  400       0     0     0>
         , <&key_physical_attrs 200 100 1650  400       0     0     0>
         , <&key_physical_attrs 100 100 1850  400       0     0     0>
+        , <&key_physical_attrs 100 200 1950  300       0     0     0>
         ;
     };
 
@@ -271,7 +271,6 @@
         , <&key_physical_attrs 100 100 1650  300       0     0     0>
         , <&key_physical_attrs 100 100 1750  300       0     0     0>
         , <&key_physical_attrs 100 100 1850  300       0     0     0>
-        , <&key_physical_attrs 100 200 1950  300       0     0     0>
         , <&key_physical_attrs 150 100    0  400       0     0     0>
         , <&key_physical_attrs 100 100  150  400       0     0     0>
         , <&key_physical_attrs 150 100  250  400       0     0     0>
@@ -282,6 +281,7 @@
         , <&key_physical_attrs 100 100 1500  400       0     0     0>
         , <&key_physical_attrs 200 100 1650  400       0     0     0>
         , <&key_physical_attrs 100 100 1850  400       0     0     0>
+        , <&key_physical_attrs 100 200 1950  300       0     0     0>
         ;
     };
 
@@ -309,17 +309,17 @@
 
         deow_all {
             physical-layout = <&deow_all>;
-            positions = <13 57 56 85>;
+            positions = <13 57 56 83>;
         };
 
         deow_ansi {
             physical-layout = <&deow_ansi>;
-            positions = <13 55 37 81>;
+            positions = <13 55 37 80>;
         };
 
         deow_ansi_split_bs {
             physical-layout = <&deow_ansi_split_bs>;
-            positions = <13 56 38 82>;
+            positions = <13 56 38 81>;
         };
         
     };

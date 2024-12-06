@@ -4,7 +4,7 @@
 if BOARD_DE60_HS_BLE_MINILA
 
 config ZMK_KEYBOARD_NAME
-    default "DE60 HS BLE MINILA"
+    default "DE60 HS MINILA"
 
 if USB_DEVICE_STACK
 

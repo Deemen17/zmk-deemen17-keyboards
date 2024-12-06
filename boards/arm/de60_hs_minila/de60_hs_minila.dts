@@ -24,7 +24,7 @@
         zmk,battery = &vbatt;
         zmk,kscan = &kscan0;
         zmk,underglow = &led_strip;
-        zmk,physical-layout = &de60_minila_split_bs;
+        zmk,physical-layout = &de60_minila_2u_bs;
     };
 
     de60_minila_2u_bs_transform: de60_minila_2u_bs_transform {

@@ -17,13 +17,11 @@
 #     artifact-name: corne_left_with_logging
 #
 ---
-board: ["deow", "de60_hs_ble_minila"]
+board: ["deow", "de60_hs_minila"]
 include:
   - board: deow
     snippet: studio-rpc-usb-uart
-    cmake-args: -DCONFIG_ZMK_STUDIO=y
     artifact-name: deemen17_deow_studio
-  - board: de60_hs_ble_minila
+  - board: de60_hs_minila
     snippet: studio-rpc-usb-uart
-    cmake-args: -DCONFIG_ZMK_STUDIO=y
-    artifact-name: deemen17_deow_studio
+    artifact-name: deemen17_de60_hs_minila_studio

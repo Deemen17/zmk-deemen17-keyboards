@@ -1,10 +1,10 @@
 # Copyright (c) 2024 Deemen17 Works
 # SPDX-License-Identifier: MIT
 
-if BOARD_DE60_HS_BLE_MINILA
+if BOARD_DE60_HS_MINILA
 
 config ZMK_KEYBOARD_NAME
-    default "DE60 HS MINILA"
+    default "DE60 MINILA BLE"
 
 if USB_DEVICE_STACK
 
@@ -22,4 +22,4 @@ config ZMK_BLE
 config ZMK_USB
     default y
 
-endif # BOARD_DE60_HS_BLE_MINILA
+endif # BOARD_DE60_HS_MINILA

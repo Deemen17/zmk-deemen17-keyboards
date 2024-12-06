@@ -1,6 +1,6 @@
 file_format: "1"
-id: de60_hs_ble_minila
-name: de60_hs_ble_minila
+id: de60_hs_minila
+name: de60_hs_minila
 type: board
 arch: arm
 features:

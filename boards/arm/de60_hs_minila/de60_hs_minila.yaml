@@ -1,5 +1,5 @@
-identifier: de60_hs_ble_minila
-name: de60_hs_ble_minila
+identifier: de60_hs_minila
+name: de60_hs_minila
 type: mcu
 arch: arm
 toolchain:

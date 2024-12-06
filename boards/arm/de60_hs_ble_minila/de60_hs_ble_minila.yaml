@@ -1,0 +1,14 @@
+identifier: de60_hs_ble_minila
+name: de60_hs_ble_minila
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+supported:
+  - adc
+  - usb_device
+  - ble
+  - ieee802154
+  - pwm
+  - watchdog

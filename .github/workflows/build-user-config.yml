@@ -1,0 +1,51 @@
+name: ZMK Build and Zip Artifacts
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        board: ["deow", "de60_hs_minila"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up ZMK
+        run: |
+          # Cài đặt và cấu hình ZMK
+          sudo apt-get install -y cmake ninja-build gperf gcc-arm-none-eabi
+
+      - name: Build firmware for ${{ matrix.board }}
+        run: |
+          # Build cho từng board
+          cd zmk
+          ./pants build zmk:boards/${{ matrix.board }}
+      
+      - name: Create artifact directory
+        run: |
+          mkdir -p artifacts/${{ matrix.board }}
+
+      - name: Move build outputs
+        run: |
+          mv zmk/build/${{ matrix.board }}/zmk.uf2 artifacts/${{ matrix.board }}/
+
+      - name: Zip the build outputs for ${{ matrix.board }}
+        run: |
+          zip -r artifacts/${{ matrix.board }}.zip artifacts/${{ matrix.board }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.board }}-artifact
+          path: artifacts/${{ matrix.board }}.zip

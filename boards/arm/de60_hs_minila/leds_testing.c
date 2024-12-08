@@ -40,6 +40,11 @@ static struct output_status_state get_state(const zmk_event_t *_eh) {
     };
 }
 
+// Timer và trạng thái cho LED BLE quảng bá
+static struct k_timer ble_adv_timer;
+static bool ble_adv_led_on = false;
+static int ble_adv_led_index = -1;
+
 // Hàm callback của timer để nháy LED
 static void ble_adv_timer_handler(struct k_timer *timer_id) {
     if (ble_adv_led_index >= 0) {
@@ -56,11 +61,6 @@ static void ble_adv_timer_handler(struct k_timer *timer_id) {
 
 // GPIO-based LED device
 static const struct device *led_dev = DEVICE_DT_GET(LED_GPIO_NODE_ID);
-
-// Timer và trạng thái cho LED BLE quảng bá
-static struct k_timer ble_adv_timer;
-static bool ble_adv_led_on = false;
-static int ble_adv_led_index = -1;
 
 // Caps Lock Indicator
 static int led_keylock_listener_cb(const zmk_event_t *eh) {

@@ -24,6 +24,11 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
+#define LED_GPIO_NODE_ID DT_COMPAT_GET_ANY_STATUS_OKAY(gpio_leds)
+
+// GPIO-based LED device
+static const struct device *led_dev = DEVICE_DT_GET(LED_GPIO_NODE_ID);
+
 // 
 struct output_status_state {
     struct zmk_endpoint_instance selected_endpoint;
@@ -57,10 +62,7 @@ static void ble_adv_timer_handler(struct k_timer *timer_id) {
     }
 }
 
-#define LED_GPIO_NODE_ID DT_COMPAT_GET_ANY_STATUS_OKAY(gpio_leds)
 
-// GPIO-based LED device
-static const struct device *led_dev = DEVICE_DT_GET(LED_GPIO_NODE_ID);
 
 // Caps Lock Indicator
 static int led_keylock_listener_cb(const zmk_event_t *eh) {

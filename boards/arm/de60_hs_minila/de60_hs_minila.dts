@@ -96,10 +96,12 @@ RC(4,0) RC(4,1)         RC(4,3) RC(4,4)         RC(4,6)         RC(4,8)         
         compatible = "gpio-leds";
         status = "okay";
         gpio_led_caps: led_caps {
-            gpios = <&gpio0 15 (GPIO_ACTIVE_HIGH)>;
+            // gpios = <&gpio0 5 (GPIO_ACTIVE_HIGH)>;
+            gpios = <&gpio0 26 (GPIO_ACTIVE_HIGH)>;
         };
         gpio_led_usb: led_usb {
-            gpios = <&gpio0 26 (GPIO_ACTIVE_HIGH)>;
+            // gpios = <&gpio0 26 (GPIO_ACTIVE_HIGH)>;
+            gpios = <&gpio0 15 (GPIO_ACTIVE_HIGH)>;
         };
         gpio_led_ble_0: led_ble_0 {
             gpios = <&gpio0 6 (GPIO_ACTIVE_HIGH)>;
@@ -115,6 +117,7 @@ RC(4,0) RC(4,1)         RC(4,3) RC(4,4)         RC(4,6)         RC(4,8)         
     ext-power {
         compatible = "zmk,ext-power-generic";
         label = "EXT_POWER";
+        // control-gpios = <&gpio0 15 GPIO_ACTIVE_HIGH>;
         control-gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;
     };
 

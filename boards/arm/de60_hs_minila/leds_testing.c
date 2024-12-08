@@ -98,13 +98,13 @@ static void set_status_led(struct output_status_state state) {
                 // Bật LED BLE đã kết nối
                 switch (state.selected_endpoint.ble.profile_index) {
                 case 0:
-                    led_on(led_dev, DT_NODE_CHILD_IDX(DT_ALIAS(led_ble_1)));
+                    led_on(led_dev, DT_NODE_CHILD_IDX(DT_ALIAS(led_ble_0)));
                     break;
                 case 1:
-                    led_on(led_dev, DT_NODE_CHILD_IDX(DT_ALIAS(led_ble_2)));
+                    led_on(led_dev, DT_NODE_CHILD_IDX(DT_ALIAS(led_ble_1)));
                     break;
                 case 2:
-                    led_on(led_dev, DT_NODE_CHILD_IDX(DT_ALIAS(led_ble_3)));
+                    led_on(led_dev, DT_NODE_CHILD_IDX(DT_ALIAS(led_ble_2)));
                     break;
                 }
             } else {

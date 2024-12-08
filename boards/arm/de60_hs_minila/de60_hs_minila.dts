@@ -85,30 +85,30 @@ RC(4,0) RC(4,1)         RC(4,3) RC(4,4)         RC(4,6)         RC(4,8)         
     };
 
     aliases {
-		led-caps = &led_0;
-		led-usb = &led_1;
-		led-ble0 = &led_2;
-        led-ble1 = &led_3;
-        led-ble2 = &led_4;
+		led_caps = &gpio_led_caps;
+		led_usb = &gpio_led_usb;
+		led_ble_0 = &gpio_led_ble_0;
+        led_ble_1 = &gpio_led_ble_1;
+        led_ble_2 = &gpio_led_ble_2;
     };
 
     leds {
         compatible = "gpio-leds";
         status = "okay";
-        led_0: led_0 {
-            gpios = <&gpio0 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+        gpio_led_caps: led_caps {
+            gpios = <&gpio0 5 (GPIO_ACTIVE_HIGH)>;
         };
-        led_1: led_1 {
-            gpios = <&gpio0 26 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+        gpio_led_usb: led_usb {
+            gpios = <&gpio0 26 (GPIO_ACTIVE_HIGH)>;
         };
-        led_2: led_2 {
-            gpios = <&gpio0 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+        gpio_led_ble_0: led_ble_0 {
+            gpios = <&gpio0 6 (GPIO_ACTIVE_HIGH)>;
         };
-        led_3: led_3 {
-            gpios = <&gpio0 8 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+        gpio_led_ble_1: led_ble_1 {
+            gpios = <&gpio0 8 (GPIO_ACTIVE_HIGH)>;
         };
-        led_4: led_4 {
-            gpios = <&gpio1 9 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+        gpio_led_ble_2: led_ble_2 {
+            gpios = <&gpio1 9 (GPIO_ACTIVE_HIGH)>;
         };
     };
 

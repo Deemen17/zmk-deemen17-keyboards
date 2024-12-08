@@ -161,5 +161,5 @@ int output_status_init(void) {
     return 0;
 }
 
-// run leds_init on boot
+// Run leds_init on boot
 SYS_INIT(leds_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);

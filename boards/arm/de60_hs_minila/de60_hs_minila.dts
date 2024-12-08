@@ -85,11 +85,11 @@ RC(4,0) RC(4,1)         RC(4,3) RC(4,4)         RC(4,6)         RC(4,8)         
     };
 
     aliases {
-		led_caps = &gpio_led_caps;
-		led_usb = &gpio_led_usb;
-		led_ble_0 = &gpio_led_ble_0;
-        led_ble_1 = &gpio_led_ble_1;
-        led_ble_2 = &gpio_led_ble_2;
+		led-caps = &gpio_led_caps;
+		led-usb = &gpio_led_usb;
+		led-ble0 = &gpio_led_ble_0;
+        led-ble1 = &gpio_led_ble_1;
+        led-ble2 = &gpio_led_ble_2;
     };
 
     leds {

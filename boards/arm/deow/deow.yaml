@@ -12,3 +12,4 @@ supported:
   - ieee802154
   - pwm
   - watchdog
+snippet: studio-rpc-usb-uart

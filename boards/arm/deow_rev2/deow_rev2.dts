@@ -36,7 +36,7 @@
 		power-gpios = <&gpio0 3 GPIO_ACTIVE_HIGH>; // P0.03
 	};
 
-    deow_all: deow_all {
+    deow_all_transform: deow_all_transform {
         compatible = "zmk,matrix-transform";
         columns = <10>;
         rows = <10>;
@@ -49,7 +49,7 @@ RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                         
         >;
     };
     
-    deow_ansi: deow_ansi {
+    deow_ansi_transform: deow_ansi_transform {
         compatible = "zmk,matrix-transform";
         columns = <10>;
         rows = <10>;
@@ -62,7 +62,7 @@ RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                         
         >;
     };
 
-    deow_ansi_split_bs: deow_ansi_split_bs {
+    deow_ansi_split_bs_transform: deow_ansi_split_bs_transform {
         compatible = "zmk,matrix-transform";
         columns = <10>;
         rows = <10>;
@@ -75,7 +75,7 @@ RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                         
         >;
     };
 
-    deow_ansi_tsagnan: deow_ansi_tsagnan {
+    deow_ansi_tsagnan_transform: deow_ansi_tsagnan_transform {
         compatible = "zmk,matrix-transform";
         columns = <10>;
         rows = <10>;
@@ -88,7 +88,7 @@ RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                         
         >;
     };
 
-    deow_ansi_tsagnan_split_bs: deow_ansi_tsagnan_split_bs {
+    deow_ansi_tsagnan_split_bs_transform: deow_ansi_tsagnan_split_bs_transform {
         compatible = "zmk,matrix-transform";
         columns = <10>;
         rows = <10>;

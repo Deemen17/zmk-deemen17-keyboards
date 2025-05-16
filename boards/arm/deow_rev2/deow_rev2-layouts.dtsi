@@ -5,7 +5,7 @@
         compatible = "zmk,physical-layout";
         display-name = "Deow All";
         kscan = <&kscan0>;
-        transform = <&matrix_transform0>;
+        transform = <&deow_all>;
 
         keys  //                     w   h    x    y     rot    rx    ry
             = <&key_physical_attrs 100 100    0    0       0     0     0>
@@ -103,7 +103,7 @@
         compatible = "zmk,physical-layout";
         display-name = "ANSI - Backspace 2U - Space 6.25U - Plus 2U";
         kscan = <&kscan0>;
-        transform = <&matrix_transform0>;
+        transform = <&deow_ansi>;
 
         keys  //                     w   h    x    y     rot    rx    ry
             = <&key_physical_attrs 100 100    0    0       0     0     0>
@@ -198,7 +198,7 @@
         compatible = "zmk,physical-layout";
         display-name = "ANSI - Split Backspace - Space 6.25U - Plus 2U";
         kscan = <&kscan0>;
-        transform = <&matrix_transform0>;
+        transform = <&deow_ansi_split_bs>;
 
         keys  //                     w   h    x    y     rot    rx    ry
             = <&key_physical_attrs 100 100    0    0       0     0     0>
@@ -294,7 +294,7 @@
         compatible = "zmk,physical-layout";
         display-name = "ANSI - Backspace 2U - Space 7U - Plus 2U";
         kscan = <&kscan0>;
-        transform = <&matrix_transform0>;
+        transform = <&deow_ansi_tsagnan>;
 
         keys  //                     w   h    x    y     rot    rx    ry
             = <&key_physical_attrs 100 100    0    0       0     0     0>
@@ -388,7 +388,7 @@
         compatible = "zmk,physical-layout";
         display-name = "ANSI - Backspace 2U - Space 7U - Plus 2U";
         kscan = <&kscan0>;
-        transform = <&matrix_transform0>;
+        transform = <&deow_ansi_tsagnan_split_bs>;
 
         keys  //                     w   h    x    y     rot    rx    ry
             = <&key_physical_attrs 100 100    0    0       0     0     0>

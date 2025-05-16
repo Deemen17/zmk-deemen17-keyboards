@@ -1,7 +1,7 @@
 # Copyright (c) 2024 Deemen17 Works
 # SPDX-License-Identifier: MIT
 
-if BOARD_DEOW
+if BOARD_DEOW_REV2
 
 config ZMK_KEYBOARD_NAME
     default "Deow BLE"
@@ -22,4 +22,4 @@ config ZMK_BLE
 config ZMK_USB
     default y
 
-endif # BOARD_DEOW
+endif # BOARD_DEOW_REV2

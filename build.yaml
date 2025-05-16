@@ -17,11 +17,11 @@
 #     artifact-name: corne_left_with_logging
 #
 ---
-board: ["deow", "de60_hs_minila"]
+board: ["deow_rev2", "de60_hs_minila"]
 include:
-  - board: deow
+  - board: deow_rev2
     snippet: studio-rpc-usb-uart
-    artifact-name: deemen17_deow_studio
-  - board: de60_hs_minila
-    snippet: studio-rpc-usb-uart
-    artifact-name: deemen17_de60_hs_minila_studio
+    artifact-name: deemen17_deow_rev2_studio
+  # - board: de60_hs_minila
+  #   snippet: studio-rpc-usb-uart
+  #   artifact-name: deemen17_de60_hs_minila_studio

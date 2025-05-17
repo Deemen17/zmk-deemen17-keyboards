@@ -35,9 +35,9 @@ static bool connection_status_active = false;
 // Mức pin và trạng thái kết nối
 static uint8_t battery_level = 0;
 static bool ble_connected = false;
-static bool ble_advertising = false;
+static bool ble_open = false;
 
-// Cấu hình ngưỡng pin 
+// Cấu hình ngưỡng pin
 #define BATTERY_LEVEL_HIGH 50
 #define BATTERY_LEVEL_CRITICAL 10
 #define BLINK_INTERVAL_MS 250
@@ -127,8 +127,8 @@ void show_connection_status() {
     if (ble_connected) {
         LOG_DBG("BLE connected, blinking blue");
         blink_led(false, false, true, BLINK_COUNT); // Xanh dương
-    } else if (ble_advertising) {
-        LOG_DBG("BLE advertising, blinking yellow");
+    } else if (ble_open) {
+        LOG_DBG("BLE open (advertising), blinking yellow");
         blink_led(true, true, false, BLINK_COUNT); // Vàng
     } else {
         LOG_DBG("BLE disconnected, blinking red");
@@ -183,8 +183,8 @@ ZMK_SUBSCRIPTION(battery_status_listener, zmk_battery_state_changed);
 // Listener cho Connection Status
 int connection_status_listener(const zmk_event_t *eh) {
     ble_connected = zmk_ble_active_profile_is_connected();
-    ble_advertising = zmk_ble_active_profile_is_advertising();
-    LOG_DBG("BLE state changed - Connected: %d, Advertising: %d", ble_connected, ble_advertising);
+    ble_open = zmk_ble_active_profile_is_open();
+    LOG_DBG("BLE state changed - Connected: %d, Open: %d", ble_connected, ble_open);
     show_connection_status();
     return ZMK_EV_EVENT_BUBBLE;
 }
@@ -204,7 +204,7 @@ static int led_init(const struct device *device) {
     // Lấy trạng thái ban đầu
     battery_level = zmk_battery_state_of_charge();
     ble_connected = zmk_ble_active_profile_is_connected();
-    ble_advertising = zmk_ble_active_profile_is_advertising();
+    ble_open = zmk_ble_active_profile_is_open();
 
     // Hiển thị trạng thái ban đầu
     LOG_DBG("Initial battery level: %d%%", battery_level);

@@ -39,19 +39,21 @@ static int init_led_gpios(void) {
         return -ENODEV;
     }
 
-    err = gpio_pin_configure_dt(&LED_R, GPIO_OUTPUT);
+    // Configure GPIOs as output, initially HIGH (LED off)
+    err = gpio_pin_configure_dt(&LED_R, GPIO_OUTPUT_HIGH);
     if (err) LOG_ERR("Failed to configure LED_R (P0.03): %d", err);
-    err = gpio_pin_configure_dt(&LED_G, GPIO_OUTPUT);
+    err = gpio_pin_configure_dt(&LED_G, GPIO_OUTPUT_HIGH);
     if (err) LOG_ERR("Failed to configure LED_G (P1.10): %d", err);
-    err = gpio_pin_configure_dt(&LED_B, GPIO_OUTPUT);
+    err = gpio_pin_configure_dt(&LED_B, GPIO_OUTPUT_HIGH);
     if (err) LOG_ERR("Failed to configure LED_B (P1.11): %d", err);
 
     return err;
 }
 
+// Turn off LEDs (set GPIOs to HIGH for Common Anode)
 void reset_leds() {
     int err;
-    err = gpio_pin_set_dt(&LED_R, 1); // HIGH = OFF (Common Anode)
+    err = gpio_pin_set_dt(&LED_R, 1); // HIGH = OFF
     if (err) LOG_ERR("Failed to set LED_R (P0.03) HIGH: %d", err);
     err = gpio_pin_set_dt(&LED_G, 1);
     if (err) LOG_ERR("Failed to set LED_G (P1.10) HIGH: %d", err);
@@ -59,6 +61,7 @@ void reset_leds() {
     if (err) LOG_ERR("Failed to set LED_B (P1.11) HIGH: %d", err);
 }
 
+// Set LED state (Common Anode: LOW = ON, HIGH = OFF)
 void set_led_rgb(bool r, bool g, bool b) {
     int err;
     err = gpio_pin_set_dt(&LED_R, r ? 0 : 1); // LOW = ON, HIGH = OFF
@@ -87,21 +90,4 @@ int led_caps_lock_listener(const zmk_event_t *eh) {
     return ZMK_EV_EVENT_BUBBLE;
 }
 
-ZMK_LISTENER(led_caps_lock_listener, led_caps_lock_listener);
-ZMK_SUBSCRIPTION(led_caps_lock_listener, zmk_hid_indicators_changed);
-
-// Test LED on boot
-static int led_test_init(const struct device *device) {
-    LOG_DBG("Initializing LED GPIOs");
-    int err = init_led_gpios();
-    if (err) {
-        LOG_ERR("Failed to initialize LED GPIOs: %d", err);
-        return err;
-    }
-
-    LOG_DBG("LED test on boot: Setting LED to White");
-    set_led_rgb(true, true, true); // Bật LED trắng ngay khi khởi động
-    return 0;
-}
-
-SYS_INIT(led_test_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
+ZMK_LISTENER(led_caps

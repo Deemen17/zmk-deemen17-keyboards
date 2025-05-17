@@ -71,18 +71,20 @@
 
     leds {
         compatible = "gpio-leds";
-        status = "okay";
         
         led_0: led_green { // P1.11
             gpios = <&gpio1 11 GPIO_ACTIVE_LOW>;
+            status = "okay";
         };
 
         led_1: led_red { // P1.10
             gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
+            status = "okay";
         };
         
         led_2: led_blue { // P0.03
             gpios = <&gpio0 3  GPIO_ACTIVE_LOW>;
+            status = "okay";
         };
     };
 };

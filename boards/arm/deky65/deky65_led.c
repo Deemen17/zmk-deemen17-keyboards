@@ -35,6 +35,12 @@ static int current_profile_index = -1;
 // Biến toàn cục để lưu trạng thái Caps Lock
 static bool caps_lock_active = false;
 
+// Định nghĩa timer trước khi sử dụng
+void led_work_handler(struct k_work *work);
+void led_expiry_function();
+K_WORK_DEFINE(led_work, led_work_handler);
+K_TIMER_DEFINE(led_timer, led_expiry_function, NULL);
+
 void reset_leds() {
     int err;
     err = gpio_pin_configure_dt(&LED_R, GPIO_DISCONNECTED);
@@ -98,13 +104,9 @@ void led_work_handler(struct k_work *work) {
     reset_leds();
 }
 
-K_WORK_DEFINE(led_work, led_work_handler);
-
 void led_expiry_function() {
     k_work_submit(&led_work);
 }
-
-K_TIMER_DEFINE(led_timer, led_expiry_function, NULL);
 
 // Listener cho sự kiện thay đổi profile Bluetooth
 int led_listener(const zmk_event_t *eh) {

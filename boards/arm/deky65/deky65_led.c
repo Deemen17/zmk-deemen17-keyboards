@@ -90,4 +90,21 @@ int led_caps_lock_listener(const zmk_event_t *eh) {
     return ZMK_EV_EVENT_BUBBLE;
 }
 
-ZMK_LISTENER(led_caps
+ZMK_LISTENER(led_caps_lock_listener, led_caps_lock_listener);
+ZMK_SUBSCRIPTION(led_caps_lock_listener, zmk_hid_indicators_changed);
+
+// Test LED on boot
+static int led_test_init(const struct device *device) {
+    LOG_DBG("Initializing LED GPIOs");
+    int err = init_led_gpios();
+    if (err) {
+        LOG_ERR("Failed to initialize LED GPIOs: %d", err);
+        return err;
+    }
+
+    LOG_DBG("LED test on boot: Setting LED to White");
+    set_led_rgb(true, true, true); // Bật LED trắng ngay khi khởi động
+    return 0;
+}
+
+SYS_INIT(led_test_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);

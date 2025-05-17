@@ -3,7 +3,7 @@
 / {
 
     chosen {
-        zmk,physical-layout = &layout_65_ansi_transform;
+        zmk,physical-layout = &layout_65_ansi;
     };
     
     layout_65_all: layout_65_all {

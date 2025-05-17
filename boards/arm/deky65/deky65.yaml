@@ -1,5 +1,5 @@
-identifier: deow
-name: deow
+identifier: deky65
+name: deky65
 type: mcu
 arch: arm
 toolchain:
@@ -9,7 +9,5 @@ supported:
   - adc
   - usb_device
   - ble
-  - ieee802154
-  - pwm
   - watchdog
 snippet: studio-rpc-usb-uart

@@ -1,11 +1,10 @@
 file_format: "1"
-id: deow
-name: deow
+id: deky65
+name: deky65
 type: board
 arch: arm
 features:
   - keys
-  - underglow
 outputs:
   - usb
   - ble

@@ -39,10 +39,10 @@
         diode-direction = "col2row";
         row-gpios
             = <&gpio0 6  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&gpio0 8  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
             , <&gpio0 4  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
-            , <&gpio1 12 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&gpio0 12 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
             , <&gpio1 6  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
-            , <&gpio0 7  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
             ;
         col-gpios
             = <&gpio0 28 GPIO_ACTIVE_HIGH>
@@ -78,7 +78,7 @@
         };
 
         led_1: led_red { // P1.10
-            gpios = <&gpio1 11 GPIO_ACTIVE_LOW>;
+            gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
         };
         
         led_2: led_blue { // P0.03

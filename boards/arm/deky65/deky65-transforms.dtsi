@@ -2,7 +2,7 @@
 
 / {
 
-    layout_65_all_transform: keymap_transform_0  {
+    layout_65_all_transform: layout_65_all_transform  {
         compatible = "zmk,matrix-transform";
         columns = <15>;
         rows = <5>;
@@ -15,7 +15,7 @@
         >;
     };
     
-    layout_65_ansi_transform: keymap_transform_1  {
+    layout_65_ansi_transform: layout_65_ansi_transform  {
         compatible = "zmk,matrix-transform";
         columns = <15>;
         rows = <5>;
@@ -28,7 +28,7 @@
         >;
     };
 
-    layout_65_ansi_split_bs_transform: keymap_transform_2  {
+    layout_65_ansi_split_bs_transform: layout_65_ansi_split_bs_transform  {
         compatible = "zmk,matrix-transform";
         columns = <15>;
         rows = <5>;

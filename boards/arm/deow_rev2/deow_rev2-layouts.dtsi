@@ -103,7 +103,7 @@
         compatible = "zmk,physical-layout";
         display-name = "ANSI - Backspace 2U - Space 6.25U - Default Numpad";
         kscan = <&kscan0>;
-        transform = <&deow_ansi_transform>;
+        transform = <&deow_ansi_default_numpad_transform>;
 
         keys  //                     w   h    x    y     rot    rx    ry
             = <&key_physical_attrs 100 100    0    0       0     0     0>
@@ -197,7 +197,7 @@
         compatible = "zmk,physical-layout";
         display-name = "ANSI - Split Backspace - Space 6.25U - Default Numpad";
         kscan = <&kscan0>;
-        transform = <&deow_ansi_split_bs_transform>;
+        transform = <&deow_ansi_split_bs_default_numpad_transform>;
 
         keys  //                     w   h    x    y     rot    rx    ry
             = <&key_physical_attrs 100 100    0    0       0     0     0>
@@ -292,7 +292,7 @@
         compatible = "zmk,physical-layout";
         display-name = "ANSI - Backspace 2U - Space 7U - Default Numpad";
         kscan = <&kscan0>;
-        transform = <&deow_ansi_tsagnan_transform>;
+        transform = <&deow_ansi_tsagnan_default_numpad_transform>;
 
         keys  //                     w   h    x    y     rot    rx    ry
             = <&key_physical_attrs 100 100    0    0       0     0     0>
@@ -385,7 +385,7 @@
         compatible = "zmk,physical-layout";
         display-name = "ANSI - Backspace 2U - Space 7U - Default Numpad";
         kscan = <&kscan0>;
-        transform = <&deow_ansi_tsagnan_split_bs_transform>;
+        transform = <&deow_ansi_tsagnan_split_bs_default_numpad_transform>;
 
         keys  //                     w   h    x    y     rot    rx    ry
             = <&key_physical_attrs 100 100    0    0       0     0     0>

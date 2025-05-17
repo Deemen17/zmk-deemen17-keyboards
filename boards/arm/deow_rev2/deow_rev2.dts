@@ -45,11 +45,11 @@ RC(0,0) RC(1,0) RC(0,1) RC(1,1) RC(0,2) RC(1,2) RC(0,3) RC(1,3) RC(0,4) RC(1,4) 
 RC(2,0) RC(3,0) RC(2,1) RC(3,1) RC(2,2) RC(3,2) RC(2,3) RC(3,3) RC(2,4) RC(3,4) RC(2,5) RC(3,5) RC(2,6) RC(4,6)         RC(2,7) RC(3,7) RC(2,8) RC(3,8) RC(2,9)  
 RC(4,0) RC(5,0) RC(4,1) RC(5,1) RC(4,2) RC(5,2) RC(4,3) RC(5,3) RC(4,4) RC(5,4) RC(4,5) RC(5,5)         RC(5,6)         RC(4,7) RC(5,7) RC(4,8) RC(5,8) RC(4,9) 
 RC(6,0) RC(7,0) RC(6,1) RC(7,1) RC(6,2) RC(7,2) RC(6,3) RC(7,3) RC(6,4) RC(7,4) RC(6,5) RC(7,5) RC(6,6) RC(7,6)         RC(6,7) RC(7,7) RC(6,8) RC(7,8) RC(6,9)
-RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                         RC(8,5) RC(9,5) RC(8,6) RC(9,6)         RC(8,7) RC(9,7) RC(8,8) RC(9,8)  
+RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                         RC(8,5) RC(9,5) RC(8,6) RC(9,6) RC(8,7)         RC(9,7) RC(8,8) RC(9,8)  
         >;
     };
     
-    deow_ansi_transform: deow_ansi_transform {
+    deow_ansi_default_numpad_transform: deow_ansi_default_numpad_transform {
         compatible = "zmk,matrix-transform";
         columns = <10>;
         rows = <10>;
@@ -58,11 +58,11 @@ RC(0,0) RC(1,0) RC(0,1) RC(1,1) RC(0,2) RC(1,2) RC(0,3) RC(1,3) RC(0,4) RC(1,4) 
 RC(2,0) RC(3,0) RC(2,1) RC(3,1) RC(2,2) RC(3,2) RC(2,3) RC(3,3) RC(2,4) RC(3,4) RC(2,5) RC(3,5) RC(2,6) RC(4,6)         RC(2,7) RC(3,7) RC(2,8) RC(3,8)  
 RC(4,0) RC(5,0) RC(4,1) RC(5,1) RC(4,2) RC(5,2) RC(4,3) RC(5,3) RC(4,4) RC(5,4) RC(4,5) RC(5,5)         RC(5,6)         RC(4,7) RC(5,7) RC(4,8) RC(5,8) RC(4,9) 
 RC(6,0)         RC(6,1) RC(7,1) RC(6,2) RC(7,2) RC(6,3) RC(7,3) RC(6,4) RC(7,4) RC(6,5) RC(7,5) RC(6,6) RC(7,6)         RC(6,7) RC(7,7) RC(6,8) RC(7,8) RC(6,9)
-RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                         RC(8,5) RC(9,5) RC(8,6) RC(9,6)         RC(8,7) RC(9,7) RC(8,8) RC(9,8)  
+RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                         RC(8,5) RC(9,5) RC(8,6) RC(9,6) RC(8,7)         RC(9,7)         RC(9,8)  
         >;
     };
 
-    deow_ansi_split_bs_transform: deow_ansi_split_bs_transform {
+    deow_ansi_split_bs_default_numpad_transform: deow_ansi_split_bs_default_numpad_transform {
         compatible = "zmk,matrix-transform";
         columns = <10>;
         rows = <10>;
@@ -71,11 +71,11 @@ RC(0,0) RC(1,0) RC(0,1) RC(1,1) RC(0,2) RC(1,2) RC(0,3) RC(1,3) RC(0,4) RC(1,4) 
 RC(2,0) RC(3,0) RC(2,1) RC(3,1) RC(2,2) RC(3,2) RC(2,3) RC(3,3) RC(2,4) RC(3,4) RC(2,5) RC(3,5) RC(2,6) RC(4,6)         RC(2,7) RC(3,7) RC(2,8) RC(3,8)  
 RC(4,0) RC(5,0) RC(4,1) RC(5,1) RC(4,2) RC(5,2) RC(4,3) RC(5,3) RC(4,4) RC(5,4) RC(4,5) RC(5,5)         RC(5,6)         RC(4,7) RC(5,7) RC(4,8) RC(5,8) RC(4,9) 
 RC(6,0)         RC(6,1) RC(7,1) RC(6,2) RC(7,2) RC(6,3) RC(7,3) RC(6,4) RC(7,4) RC(6,5) RC(7,5) RC(6,6) RC(7,6)         RC(6,7) RC(7,7) RC(6,8) RC(7,8) RC(6,9)
-RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                         RC(8,5) RC(9,5) RC(8,6) RC(9,6)         RC(8,7) RC(9,7) RC(8,8) RC(9,8)  
+RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                         RC(8,5) RC(9,5) RC(8,6) RC(9,6) RC(8,7)         RC(9,7)         RC(9,8)  
         >;
     };
 
-    deow_ansi_tsagnan_transform: deow_ansi_tsagnan_transform {
+    deow_ansi_tsagnan_default_numpad_transform: deow_ansi_tsagnan_default_numpad_transform {
         compatible = "zmk,matrix-transform";
         columns = <10>;
         rows = <10>;
@@ -84,11 +84,11 @@ RC(0,0) RC(1,0) RC(0,1) RC(1,1) RC(0,2) RC(1,2) RC(0,3) RC(1,3) RC(0,4) RC(1,4) 
 RC(2,0) RC(3,0) RC(2,1) RC(3,1) RC(2,2) RC(3,2) RC(2,3) RC(3,3) RC(2,4) RC(3,4) RC(2,5) RC(3,5) RC(2,6) RC(4,6)         RC(2,7) RC(3,7) RC(2,8) RC(3,8)  
 RC(4,0) RC(5,0) RC(4,1) RC(5,1) RC(4,2) RC(5,2) RC(4,3) RC(5,3) RC(4,4) RC(5,4) RC(4,5) RC(5,5)         RC(5,6)         RC(4,7) RC(5,7) RC(4,8) RC(5,8) RC(4,9) 
 RC(6,0)         RC(6,1) RC(7,1) RC(6,2) RC(7,2) RC(6,3) RC(7,3) RC(6,4) RC(7,4) RC(6,5) RC(7,5) RC(6,6) RC(7,6)         RC(6,7) RC(7,7) RC(6,8) RC(7,8) RC(6,9)
-RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                                 RC(9,5) RC(8,6) RC(9,6)         RC(8,7) RC(9,7) RC(8,8) RC(9,8)  
+RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                                 RC(9,5) RC(8,6) RC(9,6) RC(8,7)         RC(9,7)         RC(9,8)  
         >;
     };
 
-    deow_ansi_tsagnan_split_bs_transform: deow_ansi_tsagnan_split_bs_transform {
+    deow_ansi_tsagnan_split_bs_default_numpad_transform: deow_ansi_tsagnan_split_bs_default_numpad_transform {
         compatible = "zmk,matrix-transform";
         columns = <10>;
         rows = <10>;
@@ -97,7 +97,7 @@ RC(0,0) RC(1,0) RC(0,1) RC(1,1) RC(0,2) RC(1,2) RC(0,3) RC(1,3) RC(0,4) RC(1,4) 
 RC(2,0) RC(3,0) RC(2,1) RC(3,1) RC(2,2) RC(3,2) RC(2,3) RC(3,3) RC(2,4) RC(3,4) RC(2,5) RC(3,5) RC(2,6) RC(4,6)         RC(2,7) RC(3,7) RC(2,8) RC(3,8)  
 RC(4,0) RC(5,0) RC(4,1) RC(5,1) RC(4,2) RC(5,2) RC(4,3) RC(5,3) RC(4,4) RC(5,4) RC(4,5) RC(5,5)         RC(5,6)         RC(4,7) RC(5,7) RC(4,8) RC(5,8) RC(4,9) 
 RC(6,0)         RC(6,1) RC(7,1) RC(6,2) RC(7,2) RC(6,3) RC(7,3) RC(6,4) RC(7,4) RC(6,5) RC(7,5) RC(6,6) RC(7,6)         RC(6,7) RC(7,7) RC(6,8) RC(7,8) RC(6,9)
-RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                                 RC(9,5) RC(8,6) RC(9,6)         RC(8,7) RC(9,7) RC(8,8) RC(9,8)  
+RC(8,0) RC(9,0) RC(8,1)                         RC(8,3)                                 RC(9,5) RC(8,6) RC(9,6) RC(8,7)         RC(9,7)         RC(9,8)  
         >;
     };
 

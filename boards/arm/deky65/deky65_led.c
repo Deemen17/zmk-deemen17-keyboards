@@ -68,7 +68,7 @@ void set_led_rgb(bool r, bool g, bool b) {
 }
 
 void update_led_state() {
-    k_timer_stop(&led_timer); // Dừng timer trước khi thay đổi trạng thái LED
+    k_timer_stop(&led_timer);
     if (caps_lock_active) {
         LOG_DBG("Caps Lock active, setting LED to White (no timeout)");
         set_led_rgb(true, true, true); // White, không bật timer
@@ -92,13 +92,17 @@ void update_led_state() {
                 break;
             default:
                 reset_leds();
+                LOG_DBG("No active profile, LEDs turned off");
                 break;
         }
-        k_timer_start(&led_timer, K_SECONDS(LED_TIMEOUT_S), K_NO_WAIT); // Bật timer khi Caps Lock tắt
+        if (current_profile_index >= 0) {
+            k_timer_start(&led_timer, K_SECONDS(LED_TIMEOUT_S), K_NO_WAIT);
+        }
     }
 }
 
 void led_work_handler(struct k_work *work) {
+    LOG_DBG("Timer expired, turning off LEDs");
     reset_leds();
 }
 
@@ -109,6 +113,7 @@ void led_expiry_function() {
 int led_listener(const zmk_event_t *eh) {
     const struct zmk_ble_active_profile_changed *profile_ev = as_zmk_ble_active_profile_changed(eh);
     if (!profile_ev) {
+        LOG_DBG("Received event is not BLE profile change event");
         return ZMK_EV_EVENT_BUBBLE;
     }
     current_profile_index = profile_ev->index;
@@ -121,6 +126,7 @@ int led_caps_lock_listener(const zmk_event_t *eh) {
     zmk_hid_indicators_t flags = zmk_hid_indicators_get_current_profile();
     unsigned int capsBit = 1 << (HID_USAGE_LED_CAPS_LOCK - 1);
     bool new_caps_state = (flags & capsBit) != 0;
+    LOG_DBG("Caps Lock event received, new state: %d", new_caps_state);
     if (new_caps_state != caps_lock_active) {
         caps_lock_active = new_caps_state;
         update_led_state();
@@ -133,5 +139,16 @@ ZMK_LISTENER(led_caps_lock_listener, led_caps_lock_listener);
 
 #if defined(CONFIG_ZMK_BLE)
     ZMK_SUBSCRIPTION(led_output_status, zmk_ble_active_profile_changed);
+#else
+    #warning "CONFIG_ZMK_BLE is not enabled, Bluetooth profile events will not be detected"
 #endif
 ZMK_SUBSCRIPTION(led_caps_lock_listener, zmk_hid_indicators_changed);
+
+// Test LED on boot
+static int led_test_init(const struct device *device) {
+    LOG_DBG("Initializing LED test on boot");
+    set_led_rgb(true, true, true); // Bật LED trắng ngay khi khởi động
+    return 0;
+}
+
+SYS_INIT(led_test_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);

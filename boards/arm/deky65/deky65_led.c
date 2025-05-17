@@ -23,31 +23,50 @@ static const struct gpio_dt_spec LED_B = GPIO_DT_SPEC_GET(LED_NODE_B, gpios);
 
 static bool caps_lock_active = false;
 
+// Initialize GPIOs
+static int init_led_gpios(void) {
+    int err;
+    if (!device_is_ready(LED_R.port)) {
+        LOG_ERR("LED_R port (P0.03) not ready");
+        return -ENODEV;
+    }
+    if (!device_is_ready(LED_G.port)) {
+        LOG_ERR("LED_G port (P1.10) not ready");
+        return -ENODEV;
+    }
+    if (!device_is_ready(LED_B.port)) {
+        LOG_ERR("LED_B port (P1.11) not ready");
+        return -ENODEV;
+    }
+
+    err = gpio_pin_configure_dt(&LED_R, GPIO_OUTPUT);
+    if (err) LOG_ERR("Failed to configure LED_R (P0.03): %d", err);
+    err = gpio_pin_configure_dt(&LED_G, GPIO_OUTPUT);
+    if (err) LOG_ERR("Failed to configure LED_G (P1.10): %d", err);
+    err = gpio_pin_configure_dt(&LED_B, GPIO_OUTPUT);
+    if (err) LOG_ERR("Failed to configure LED_B (P1.11): %d", err);
+
+    return err;
+}
+
 void reset_leds() {
     int err;
-    err = gpio_pin_configure_dt(&LED_R, GPIO_DISCONNECTED);
-    if (err) LOG_ERR("Failed to configure LED_R (P0.03): %d", err);
-    err = gpio_pin_configure_dt(&LED_G, GPIO_DISCONNECTED);
-    if (err) LOG_ERR("Failed to configure LED_G (P1.10): %d", err);
-    err = gpio_pin_configure_dt(&LED_B, GPIO_DISCONNECTED);
-    if (err) LOG_ERR("Failed to configure LED_B (P1.11): %d", err);
+    err = gpio_pin_set_dt(&LED_R, 1); // HIGH = OFF (Common Anode)
+    if (err) LOG_ERR("Failed to set LED_R (P0.03) HIGH: %d", err);
+    err = gpio_pin_set_dt(&LED_G, 1);
+    if (err) LOG_ERR("Failed to set LED_G (P1.10) HIGH: %d", err);
+    err = gpio_pin_set_dt(&LED_B, 1);
+    if (err) LOG_ERR("Failed to set LED_B (P1.11) HIGH: %d", err);
 }
 
 void set_led_rgb(bool r, bool g, bool b) {
     int err;
-    reset_leds();
-    if (r) {
-        err = gpio_pin_configure_dt(&LED_R, GPIO_OUTPUT_LOW);
-        if (err) LOG_ERR("Failed to set LED_R (P0.03): %d", err);
-    }
-    if (g) {
-        err = gpio_pin_configure_dt(&LED_G, GPIO_OUTPUT_LOW);
-        if (err) LOG_ERR("Failed to set LED_G (P1.10): %d", err);
-    }
-    if (b) {
-        err = gpio_pin_configure_dt(&LED_B, GPIO_OUTPUT_LOW);
-        if (err) LOG_ERR("Failed to set LED_B (P1.11): %d", err);
-    }
+    err = gpio_pin_set_dt(&LED_R, r ? 0 : 1); // LOW = ON, HIGH = OFF
+    if (err) LOG_ERR("Failed to set LED_R (P0.03): %d", err);
+    err = gpio_pin_set_dt(&LED_G, g ? 0 : 1);
+    if (err) LOG_ERR("Failed to set LED_G (P1.10): %d", err);
+    err = gpio_pin_set_dt(&LED_B, b ? 0 : 1);
+    if (err) LOG_ERR("Failed to set LED_B (P1.11): %d", err);
 }
 
 int led_caps_lock_listener(const zmk_event_t *eh) {
@@ -73,7 +92,14 @@ ZMK_SUBSCRIPTION(led_caps_lock_listener, zmk_hid_indicators_changed);
 
 // Test LED on boot
 static int led_test_init(const struct device *device) {
-    LOG_DBG("Initializing LED test on boot");
+    LOG_DBG("Initializing LED GPIOs");
+    int err = init_led_gpios();
+    if (err) {
+        LOG_ERR("Failed to initialize LED GPIOs: %d", err);
+        return err;
+    }
+
+    LOG_DBG("LED test on boot: Setting LED to White");
     set_led_rgb(true, true, true); // Bật LED trắng ngay khi khởi động
     return 0;
 }

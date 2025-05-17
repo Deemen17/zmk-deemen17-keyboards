@@ -178,6 +178,7 @@
             , <&key_physical_attrs 100 100 1650  300       0     0     0>
             , <&key_physical_attrs 100 100 1750  300       0     0     0>
             , <&key_physical_attrs 100 100 1850  300       0     0     0>
+            , <&key_physical_attrs 100 200 1950  300       0     0     0>
             , <&key_physical_attrs 125 100    0  400       0     0     0>
             , <&key_physical_attrs 125 100  125  400       0     0     0>
             , <&key_physical_attrs 125 100  250  400       0     0     0>
@@ -189,7 +190,6 @@
             , <&key_physical_attrs 100 100 1500  400       0     0     0>
             , <&key_physical_attrs 200 100 1650  400       0     0     0>
             , <&key_physical_attrs 100 100 1850  400       0     0     0>
-            , <&key_physical_attrs 100 200 1950  300       0     0     0>
             ;
     };
 
@@ -273,6 +273,7 @@
             , <&key_physical_attrs 100 100 1650  300       0     0     0>
             , <&key_physical_attrs 100 100 1750  300       0     0     0>
             , <&key_physical_attrs 100 100 1850  300       0     0     0>
+            , <&key_physical_attrs 100 200 1950  300       0     0     0>
             , <&key_physical_attrs 125 100    0  400       0     0     0>
             , <&key_physical_attrs 125 100  125  400       0     0     0>
             , <&key_physical_attrs 125 100  250  400       0     0     0>
@@ -284,7 +285,6 @@
             , <&key_physical_attrs 100 100 1500  400       0     0     0>
             , <&key_physical_attrs 200 100 1650  400       0     0     0>
             , <&key_physical_attrs 100 100 1850  400       0     0     0>
-            , <&key_physical_attrs 100 200 1950  300       0     0     0>
             ;
     };
 
@@ -367,6 +367,7 @@
             , <&key_physical_attrs 100 100 1650  300       0     0     0>
             , <&key_physical_attrs 100 100 1750  300       0     0     0>
             , <&key_physical_attrs 100 100 1850  300       0     0     0>
+            , <&key_physical_attrs 100 200 1950  300       0     0     0>
             , <&key_physical_attrs 150 100    0  400       0     0     0>
             , <&key_physical_attrs 100 100  150  400       0     0     0>
             , <&key_physical_attrs 150 100  250  400       0     0     0>
@@ -377,7 +378,6 @@
             , <&key_physical_attrs 100 100 1500  400       0     0     0>
             , <&key_physical_attrs 200 100 1650  400       0     0     0>
             , <&key_physical_attrs 100 100 1850  400       0     0     0>
-            , <&key_physical_attrs 100 200 1950  300       0     0     0>
             ;
     };
 
@@ -461,6 +461,7 @@
             , <&key_physical_attrs 100 100 1650  300       0     0     0>
             , <&key_physical_attrs 100 100 1750  300       0     0     0>
             , <&key_physical_attrs 100 100 1850  300       0     0     0>
+            , <&key_physical_attrs 100 200 1950  300       0     0     0>
             , <&key_physical_attrs 150 100    0  400       0     0     0>
             , <&key_physical_attrs 100 100  150  400       0     0     0>
             , <&key_physical_attrs 150 100  250  400       0     0     0>
@@ -471,7 +472,6 @@
             , <&key_physical_attrs 100 100 1500  400       0     0     0>
             , <&key_physical_attrs 200 100 1650  400       0     0     0>
             , <&key_physical_attrs 100 100 1850  400       0     0     0>
-            , <&key_physical_attrs 100 200 1950  300       0     0     0>
             ;
     };
 
@@ -485,22 +485,22 @@
 
         deow_ansi {
             physical-layout = <&deow_ansi>;
-            positions = <13 54 55 77 81>;
+            positions = <13 54 55 78 82>;
         };
 
         deow_ansi_split_bs {
             physical-layout = <&deow_ansi_split_bs>;
-            positions = <13 55 56 78 82>;
+            positions = <13 55 56 79 83>;
         };
 
         deow_ansi_tsagnan {
             physical-layout = <&deow_ansi_tsagnan>;
-            positions = <13 54 55 76 80>;
+            positions = <13 54 55 77 81>;
         };
 
         deow_ansi_tsagnan_split_bs {
             physical-layout = <&deow_ansi_tsagnan_split_bs>;
-            positions = <13 55 56 77 81>;
+            positions = <13 55 56 78 82>;
         };
     };
 };

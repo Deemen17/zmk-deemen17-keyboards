@@ -485,27 +485,27 @@
 
         deow_all {
             physical-layout = <&deow_all>;
-            positions = <13 56 57 85 79 81>;
+            positions = <13 56 57 76 77 78 79 81 85>;
         };
 
         deow_ansi {
             physical-layout = <&deow_ansi>;
-            positions = <13 54 55 82 76 78>;
+            positions = <13 54 55 73 74 75 76 78 82>;
         };
 
         deow_ansi_split_bs {
             physical-layout = <&deow_ansi_split_bs>;
-            positions = <13 55 56 83 77 79>;
+            positions = <13 55 56 74 75 76 77 79 83>;
         };
 
         deow_ansi_tsagnan {
             physical-layout = <&deow_ansi_tsagnan>;
-            positions = <13 54 55 81 76 77>;
+            positions = <13 54 55 73 74 75 76 77 81>;
         };
 
         deow_ansi_tsagnan_split_bs {
             physical-layout = <&deow_ansi_tsagnan_split_bs>;
-            positions = <13 55 56 82 77 78>;
+            positions = <13 55 56 74 75 76 77 78 82>;
         };
     };
 };

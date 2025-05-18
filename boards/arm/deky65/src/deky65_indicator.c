@@ -35,10 +35,6 @@ static const uint8_t rgb_idx[] = {DT_NODE_CHILD_IDX(DT_ALIAS(ledred)),
 static const char *color_names[] = {"black", "red", "green", "yellow",
                                     "blue", "magenta", "cyan", "white"};
 
-// Rainbow effect configuration
-#define RAINBOW_BLINK_ON_MS   250
-#define RAINBOW_BLINK_OFF_MS  250
-
 // Hard-coded values
 #define BATTERY_COLOR_HIGH        2  // Green
 #define BATTERY_COLOR_MEDIUM      3  // Yellow
@@ -54,6 +50,8 @@ static const char *color_names[] = {"black", "red", "green", "yellow",
 #define BATTERY_LEVEL_HIGH        50
 #define BATTERY_LEVEL_LOW         11
 #define BATTERY_LEVEL_CRITICAL    10
+#define CONN_CONNECTED_DURATION   5000  // 5 seconds
+#define CONN_DISCONNECTED_BLINKS  5     // 5 blinks
 
 // Log shorthands
 #define LOG_CONN(index, status, color) \
@@ -66,6 +64,7 @@ struct blink_item {
     uint8_t color;
     uint16_t duration_ms;
     uint16_t sleep_ms;
+    uint8_t repeat; // Number of blinks (0 for continuous)
 };
 
 // Flag to indicate whether the initial boot up sequence is complete
@@ -74,23 +73,32 @@ static bool initialized = false;
 // Caps Lock state
 static bool caps_lock_active = false;
 
-// Define message queue of blink work items, that will be processed by a separate thread
+// Define message queue of blink work items
 K_MSGQ_DEFINE(led_msgq, sizeof(struct blink_item), 16, 1);
 
 #if IS_ENABLED(CONFIG_ZMK_BLE)
 void indicate_connectivity(void) {
-    struct blink_item blink = {.duration_ms = CONN_BLINK_MS};
+    struct blink_item blink = {
+        .duration_ms = CONN_BLINK_MS,
+        .sleep_ms = INTERVAL_MS,
+        .repeat = 0
+    };
     uint8_t profile_index = zmk_ble_active_profile_index();
     
     if (zmk_ble_active_profile_is_connected()) {
         LOG_CONN(profile_index, "connected", CONN_COLOR_CONNECTED);
         blink.color = CONN_COLOR_CONNECTED;
+        blink.duration_ms = CONN_CONNECTED_DURATION;
+        blink.sleep_ms = 0;
+        blink.repeat = 1; // Solid for 5 seconds
     } else if (zmk_ble_active_profile_is_open()) {
         LOG_CONN(profile_index, "open", CONN_COLOR_ADVERTISING);
         blink.color = CONN_COLOR_ADVERTISING;
+        blink.repeat = 0; // Continuous blinking
     } else {
         LOG_CONN(profile_index, "not connected", CONN_COLOR_DISCONNECTED);
         blink.color = CONN_COLOR_DISCONNECTED;
+        blink.repeat = CONN_DISCONNECTED_BLINKS; // 5 blinks
     }
 
     k_msgq_put(&led_msgq, &blink, K_NO_WAIT);
@@ -127,7 +135,11 @@ static inline uint8_t get_battery_color(uint8_t battery_level) {
 }
 
 void indicate_battery(void) {
-    struct blink_item blink = {.duration_ms = BATTERY_BLINK_MS};
+    struct blink_item blink = {
+        .duration_ms = BATTERY_BLINK_MS,
+        .sleep_ms = INTERVAL_MS,
+        .repeat = 1 // Default: 1 blink
+    };
     int retry = 0;
 
     uint8_t battery_level = zmk_battery_state_of_charge();
@@ -136,7 +148,14 @@ void indicate_battery(void) {
         battery_level = zmk_battery_state_of_charge();
     }
 
-    blink.color = get_battery_color(battery_level);
+    if (battery_level > 0 && battery_level <= BATTERY_LEVEL_CRITICAL) {
+        LOG_BATTERY(battery_level, BATTERY_COLOR_CRITICAL);
+        blink.color = BATTERY_COLOR_CRITICAL;
+        blink.repeat = 0; // Continuous blinking
+    } else {
+        blink.color = get_battery_color(battery_level);
+    }
+
     k_msgq_put(&led_msgq, &blink, K_NO_WAIT);
 }
 
@@ -149,8 +168,12 @@ static int led_battery_listener_cb(const zmk_event_t *eh) {
 
     if (battery_level > 0 && battery_level <= BATTERY_LEVEL_CRITICAL) {
         LOG_BATTERY(battery_level, BATTERY_COLOR_CRITICAL);
-        struct blink_item blink = {.duration_ms = BATTERY_BLINK_MS,
-                                   .color = BATTERY_COLOR_CRITICAL};
+        struct blink_item blink = {
+            .duration_ms = BATTERY_BLINK_MS,
+            .color = BATTERY_COLOR_CRITICAL,
+            .sleep_ms = INTERVAL_MS,
+            .repeat = 0 // Continuous blinking
+        };
         k_msgq_put(&led_msgq, &blink, K_NO_WAIT);
     }
     return 0;
@@ -174,7 +197,8 @@ static int led_caps_lock_listener(const zmk_event_t *eh) {
         struct blink_item blink = {
             .color = caps_lock_active ? 7 : 0, // White (7) or Off (0)
             .duration_ms = 0, // Solid color
-            .sleep_ms = 0
+            .sleep_ms = 0,
+            .repeat = 1
         };
         LOG_INF("Caps Lock %s, setting %s", caps_lock_active ? "ON" : "OFF", color_names[blink.color]);
         k_msgq_put(&led_msgq, &blink, K_NO_WAIT);
@@ -189,6 +213,11 @@ ZMK_SUBSCRIPTION(led_caps_lock_listener, zmk_hid_indicators_changed);
 uint8_t led_current_color = 0;
 
 static void set_rgb_leds(uint8_t color, uint16_t duration_ms) {
+    if (!device_is_ready(led_dev)) {
+        LOG_ERR("LED device %s is not ready", led_dev->name);
+        return;
+    }
+
     for (uint8_t pos = 0; pos < 3; pos++) {
         uint8_t bit = BIT(pos);
         if ((bit & led_current_color) != (bit & color)) {
@@ -203,26 +232,6 @@ static void set_rgb_leds(uint8_t color, uint16_t duration_ms) {
         k_sleep(K_MSEC(duration_ms));
     }
     led_current_color = color;
-}
-
-// Rainbow boot effect
-static void rainbow_boot_effect(void) {
-    LOG_INF("Starting rainbow boot effect");
-    const uint8_t rainbow_colors[] = {
-        1, // Red
-        3, // Orange (same as Yellow)
-        3, // Yellow
-        2, // Green
-        4, // Blue
-        4, // Indigo (using Blue)
-        5  // Purple (Magenta)
-    };
-
-    for (int i = 0; i < 7; i++) {
-        set_rgb_leds(rainbow_colors[i], RAINBOW_BLINK_ON_MS);
-        set_rgb_leds(0, RAINBOW_BLINK_OFF_MS);
-    }
-    LOG_INF("Rainbow boot effect completed");
 }
 
 void led_process_thread(void *d0, void *d1, void *d2) {
@@ -242,20 +251,31 @@ void led_process_thread(void *d0, void *d1, void *d2) {
             continue;
         }
 
-        LOG_DBG("Got a blink item from msgq, color %d, duration %d", blink.color, blink.duration_ms);
+        LOG_DBG("Got a blink item from msgq, color %d, duration %d, repeat %d", 
+                blink.color, blink.duration_ms, blink.repeat);
 
-        if (blink.duration_ms > 0) {
-            // Blink the LEDs, using a separation blink if necessary
-            if (blink.color == led_current_color && blink.color > 0) {
-                set_rgb_leds(0, INTERVAL_MS);
+        if (blink.repeat == 0) {
+            // Continuous blinking
+            while (true) {
+                if (blink.color == led_current_color && blink.color > 0) {
+                    set_rgb_leds(0, INTERVAL_MS);
+                }
+                set_rgb_leds(blink.color, blink.duration_ms);
+                set_rgb_leds(caps_lock_active ? 7 : 0, blink.sleep_ms);
+                // Check if Caps Lock state changed to break continuous loop
+                if (caps_lock_active) {
+                    break;
+                }
             }
-            set_rgb_leds(blink.color, blink.duration_ms);
-            // Restore off state
-            set_rgb_leds(caps_lock_active ? 7 : 0,
-                         blink.sleep_ms > 0 ? blink.sleep_ms : INTERVAL_MS);
         } else {
-            LOG_DBG("Got a color item from msgq, color %d", blink.color);
-            set_rgb_leds(blink.color, 0);
+            // Finite number of blinks
+            for (uint8_t i = 0; i < blink.repeat; i++) {
+                if (blink.color == led_current_color && blink.color > 0) {
+                    set_rgb_leds(0, INTERVAL_MS);
+                }
+                set_rgb_leds(blink.color, blink.duration_ms);
+                set_rgb_leds(caps_lock_active ? 7 : 0, blink.sleep_ms);
+            }
         }
     }
 }
@@ -268,9 +288,13 @@ void led_init_thread(void *d0, void *d1, void *d2) {
     ARG_UNUSED(d1);
     ARG_UNUSED(d2);
 
-    // Run rainbow boot effect
-    rainbow_boot_effect();
-    set_rgb_leds(0, 0); // Ensure LED off after rainbow
+    if (!device_is_ready(led_dev)) {
+        LOG_ERR("LED device %s is not ready", led_dev->name);
+        return;
+    }
+
+    // Ensure LED is off at start
+    set_rgb_leds(0, 0);
 
 #if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
     LOG_INF("Indicating initial battery status");
@@ -291,7 +315,8 @@ void led_init_thread(void *d0, void *d1, void *d2) {
     struct blink_item blink = {
         .color = caps_lock_active ? 7 : 0, // White or Off
         .duration_ms = 0,
-        .sleep_ms = 0
+        .sleep_ms = 0,
+        .repeat = 1
     };
     LOG_INF("Initial Caps Lock %s, setting %s", caps_lock_active ? "ON" : "OFF", color_names[blink.color]);
     k_msgq_put(&led_msgq, &blink, K_NO_WAIT);

@@ -88,6 +88,21 @@
             label = "Blue LED";
         };
     };
+
+    behaviors {
+        ind_bat: ind_bat {
+            compatible = "zmk,behavior-rgbled-widget";
+            label = "IND_BAT";
+            #binding-cells = <0>;
+            indicate-battery;
+        };
+        ind_con: ind_con {
+            compatible = "zmk,behavior-rgbled-widget";
+            label = "IND_CON";
+            #binding-cells = <0>;
+            indicate-connectivity;
+        };
+    };
 };
 
 &gpio0 {

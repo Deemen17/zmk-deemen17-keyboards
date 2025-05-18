@@ -70,14 +70,17 @@ static int init_leds(void) {
         return -ENODEV;
     }
 
-    ret |= gpio_pin_configure_dt(&led_r, GPIO_OUTPUT_ACTIVE);   // Thay đổi thành ACTIVE
-    ret |= gpio_pin_configure_dt(&led_g, GPIO_OUTPUT_ACTIVE);
-    ret |= gpio_pin_configure_dt(&led_b, GPIO_OUTPUT_ACTIVE);
+    // Configure pins as active high outputs
+    ret |= gpio_pin_configure_dt(&led_r, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
+    ret |= gpio_pin_configure_dt(&led_g, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
+    ret |= gpio_pin_configure_dt(&led_b, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
+    
+    // Reset LED state
+    atomic_set(&led_state.current_color, COLOR_OFF);
+    atomic_set(&led_state.current_priority, PRIO_IDLE);
     
     // Start with all LEDs off (Common Anode: HIGH = OFF)
-    gpio_pin_set_dt(&led_r, 1);  // Thay đổi thành 1 = OFF
-    gpio_pin_set_dt(&led_g, 1);
-    gpio_pin_set_dt(&led_b, 1);
+    set_led_color(COLOR_OFF);
     
     return ret;
 }
@@ -142,6 +145,8 @@ static void update_led_state(void) {
     uint8_t new_color = COLOR_OFF;
     enum led_priority new_priority = PRIO_IDLE;
 
+    LOG_DBG("Current LED Priority: %d", atomic_get(&led_state.current_priority));
+    LOG_DBG("Current LED Color: %d", atomic_get(&led_state.current_color));
     LOG_DBG("Updating LED state - Battery:%d%% Caps:%d BLE:%d/%d", 
             led_state.battery_level, led_state.caps_lock,
             led_state.ble_connected, led_state.ble_open);
@@ -154,21 +159,27 @@ static void update_led_state(void) {
     }
     // Priority 2: Caps Lock
     else if (led_state.caps_lock) {
+        LOG_DBG("Caps Lock active");
         new_color = COLOR_WHITE;
         new_priority = PRIO_CAPS_LOCK;
     }
     // Priority 3: Normal Battery
-    else if (led_state.battery_level <= 40) { // Thêm dấu ngoặc nhọn
+    else if (led_state.battery_level <= 40) {
+        LOG_DBG("Normal battery level: %d%%", led_state.battery_level);
         new_color = (led_state.battery_level <= 25) ? COLOR_YELLOW : COLOR_GREEN;
         new_priority = PRIO_BATTERY;
     }
     // Priority 4: BLE Status
     else if (led_state.ble_connected) {
+        LOG_DBG("BLE connected");
         new_color = COLOR_BLUE;
         new_priority = PRIO_BLE;
     } else if (led_state.ble_open) {
+        LOG_DBG("BLE open");
         new_color = COLOR_YELLOW;
         new_priority = PRIO_BLE;
+    } else {
+        LOG_DBG("No active state, turning LED off");
     }
 
     // Apply if higher or equal priority
@@ -257,6 +268,11 @@ static int led_init(const struct device *dev) {
     k_timer_init(&led_state.blink_timer, blink_handler, NULL);
     k_timer_init(&led_state.rainbow_timer, rainbow_handler, NULL);
     k_timer_init(&led_state.debounce_timer, on_debounce, NULL);
+
+    // Clear any existing LED state
+    k_timer_stop(&led_state.blink_timer);
+    k_timer_stop(&led_state.rainbow_timer);
+    k_timer_stop(&led_state.debounce_timer);
 
     // Rainbow boot effect
     LOG_DBG("Starting rainbow boot effect");

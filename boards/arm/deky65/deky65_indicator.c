@@ -162,35 +162,65 @@ static void update_led_state(void) {
     uint8_t new_color = COLOR_OFF;
     enum led_priority new_priority = PRIO_IDLE;
 
+    LOG_DBG("Update LED State - Current Status:");
+    LOG_DBG("  Caps Lock: %s", led_state.caps_lock ? "ON" : "OFF");
+    LOG_DBG("  Battery: %d%%", led_state.battery_level);
+    LOG_DBG("  BLE: Connected=%d, Open=%d", led_state.ble_connected, led_state.ble_open);
+
     // Priority 1: Caps Lock (Highest)
     if (led_state.caps_lock) {
-        LOG_DBG("Caps Lock ON - Setting WHITE");
-        new_color = COLOR_WHITE;     // 0b111 for ACTIVE_HIGH
-        new_priority = PRIO_CAPS;
-        k_timer_stop(&led_state.blink_timer);  // Ensure no blinking
-    } else {
-        LOG_DBG("Caps Lock OFF - Setting LED OFF");
-        new_color = COLOR_OFF;       // 0b000 for ACTIVE_HIGH
-        new_priority = PRIO_IDLE;    // Reset priority
-        k_timer_stop(&led_state.blink_timer);
+        LOG_DBG("Caps Lock Mode - Setting WHITE");
+        new_color = COLOR_WHITE;     // LED trắng khi Caps Lock ON
+        new_priority = PRIO_CAPS;    // Ưu tiên cao nhất
+        k_timer_stop(&led_state.blink_timer);  // Dừng nhấp nháy
+    }
+    // Priority 2: Battery Status
+    else if (led_state.battery_level != BATTERY_LEVEL_UNKNOWN) {
+        if (led_state.battery_level < BATTERY_CRITICAL_THRESHOLD) {
+            LOG_DBG("Critical Battery - Setting RED");
+            new_color = COLOR_RED;
+            new_priority = PRIO_BATTERY;
+        }
+        else if (led_state.battery_level < BATTERY_LOW_THRESHOLD) {
+            LOG_DBG("Low Battery - Setting YELLOW");
+            new_color = COLOR_YELLOW;
+            new_priority = PRIO_BATTERY;
+        }
+        else {
+            LOG_DBG("Good Battery - Setting GREEN");
+            new_color = COLOR_GREEN;
+            new_priority = PRIO_BATTERY;
+        }
+    }
+    // Priority 3: BLE Status
+    else {
+        if (led_state.ble_connected) {
+            LOG_DBG("BLE Connected - Blinking BLUE");
+            new_color = COLOR_BLUE;
+            new_priority = PRIO_BLE;
+            k_timer_start(&led_state.blink_timer, K_MSEC(BLE_BLINK_INTERVAL), K_MSEC(BLE_BLINK_INTERVAL));
+        } 
+        else if (led_state.ble_open) {
+            LOG_DBG("BLE Advertising - Blinking CYAN");
+            new_color = COLOR_CYAN;
+            new_priority = PRIO_BLE;
+            k_timer_start(&led_state.blink_timer, K_MSEC(BLE_BLINK_INTERVAL), K_MSEC(BLE_BLINK_INTERVAL));
+        }
+        else {
+            LOG_DBG("No active state - LED OFF");
+            new_color = COLOR_OFF;
+            new_priority = PRIO_IDLE;
+            k_timer_stop(&led_state.blink_timer);
+        }
     }
 
-    // Immediately apply Caps Lock state changes
-    LOG_DBG("Applying LED state - Color: %d", new_color);
+    // Apply new state
     atomic_set(&led_state.current_color, new_color);
     atomic_set(&led_state.current_priority, new_priority);
+    LOG_DBG("LED State Change: %s -> %s", 
+            get_color_str(old_color), 
+            get_color_str(new_color));
     set_led_color(new_color);
-    
-    // Only update if new priority is higher/equal
-    if (new_priority >= old_priority) {
-        atomic_set(&led_state.current_color, new_color);
-        atomic_set(&led_state.current_priority, new_priority);
-        set_led_color(new_color);
-    }
-
-    LOG_DBG("LED State Change:");
-    LOG_DBG("  From: %s", get_color_str(old_color));
-    LOG_DBG("  To:   %s", get_color_str(new_color));
 }
 
 /* Event Handlers */

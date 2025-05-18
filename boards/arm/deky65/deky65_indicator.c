@@ -35,10 +35,9 @@ enum led_color {
 /* System Priorities */
 enum led_priority {
     PRIO_IDLE,
-    PRIO_BLE,
-    PRIO_BATTERY,
-    PRIO_CAPS_LOCK,
-    PRIO_CRITICAL
+    PRIO_BLE,      // Bluetooth status
+    PRIO_BATTERY,  // Battery status
+    PRIO_CAPS      // Caps Lock (highest)
 };
 
 /* Timing Constants */
@@ -49,6 +48,9 @@ enum led_priority {
 /* Config Options */
 #define LED_BLINK_ON_LOW_BATTERY 0  // 0/1 for enable/disable blink on low battery
 #define BATTERY_LEVEL_UNKNOWN 0    // 0/1 for enable/disable battery 
+#define BATTERY_CRITICAL_THRESHOLD 10
+#define BATTERY_LOW_THRESHOLD 50
+#define BLE_BLINK_INTERVAL 1000
 
 /* Function Declarations */
 static void set_led_color(uint8_t color);
@@ -58,7 +60,6 @@ static struct {
     atomic_t current_color;
     atomic_t current_priority;
     struct k_timer blink_timer;
-    struct k_timer rainbow_timer;
     struct k_timer debounce_timer;
     uint8_t battery_level;
     bool caps_lock;
@@ -82,9 +83,7 @@ static void set_led_color(uint8_t color) {
         default: color_name = "UNKNOWN"; break;
     }
     
-    bool red = (color >> 2) & 1;
-    bool green = (color >> 1) & 1;
-    bool blue = color & 1;
+     
     
     LOG_DBG("LED Color Change:");
     LOG_DBG("- Color: %s (0b%d%d%d)", color_name, red, green, blue);
@@ -117,9 +116,10 @@ static void blink_handler(struct k_timer *timer) {
 }
 
 static const uint8_t rainbow_colors[] = {
-    COLOR_RED,
-    COLOR_GREEN,
-    COLOR_BLUE
+    COLOR_RED,    // Bắt đầu với đỏ
+    COLOR_GREEN,  // Xanh lá
+    COLOR_BLUE,   // Xanh dương
+    COLOR_WHITE   // Kết thúc với trắng
 };
 
 /* Rainbow Effect */
@@ -166,69 +166,48 @@ static void update_led_state(void) {
     uint8_t old_color = atomic_get(&led_state.current_color);
     enum led_priority old_priority = atomic_get(&led_state.current_priority);
     
-    LOG_DBG("------------ LED STATE UPDATE ------------");
-    LOG_DBG("Previous state - Color:%d Priority:%d", old_color, old_priority);
-    LOG_DBG("Battery: %d%% | Caps: %d | BLE: conn=%d open=%d", 
-            led_state.battery_level, led_state.caps_lock,
-            led_state.ble_connected, led_state.ble_open);
-    LOG_DBG("Active timers - Blink:%d Rainbow:%d", 
-            k_timer_remaining_get(&led_state.blink_timer),
-            k_timer_remaining_get(&led_state.rainbow_timer));
-
     uint8_t new_color = COLOR_OFF;
     enum led_priority new_priority = PRIO_IDLE;
 
-    // Priority 1: Critical Battery (chỉ khi có pin)
-    if (led_state.battery_level != BATTERY_LEVEL_UNKNOWN && led_state.battery_level <= 10) {
-        LOG_DBG("Critical battery level detected");
+    // Priority 1: Caps Lock (Highest)
+    if (led_state.caps_lock) {
+        new_color = COLOR_WHITE;
+        new_priority = PRIO_CAPS;
+        k_timer_stop(&led_state.blink_timer);
+    }
+    // Priority 2: Critical Battery (<10%) overrides everything except Caps
+    else if (led_state.battery_level < BATTERY_CRITICAL_THRESHOLD) {
         new_color = COLOR_RED;
-        new_priority = PRIO_CRITICAL;
-    }
-    // Priority 2: Caps Lock
-    else if (led_state.caps_lock) {
-        LOG_DBG("Caps Lock active - LED ON WHITE");
-        new_color = COLOR_WHITE;  // 0b000 = R,G,B đều ON
-        new_priority = PRIO_CAPS_LOCK;
-    }
-    // Priority 3: Normal Battery (chỉ khi có pin)
-    else if (led_state.battery_level != BATTERY_LEVEL_UNKNOWN && led_state.battery_level <= 40) {
-        LOG_DBG("Normal battery level: %d%%", led_state.battery_level);
-        new_color = (led_state.battery_level <= 25) ? COLOR_YELLOW : COLOR_GREEN;
         new_priority = PRIO_BATTERY;
+        k_timer_stop(&led_state.blink_timer);
     }
-    // Priority 4: BLE Status
-    else if (led_state.ble_connected) {
-        LOG_DBG("BLE connected");
-        new_color = COLOR_BLUE;
+    // Priority 3: Normal Battery Status
+    else if (led_state.battery_level >= BATTERY_CRITICAL_THRESHOLD) {
+        if (led_state.battery_level >= BATTERY_LOW_THRESHOLD) {
+            new_color = COLOR_GREEN;
+        } else {
+            new_color = COLOR_YELLOW;
+        }
+        new_priority = PRIO_BATTERY;
+        k_timer_stop(&led_state.blink_timer);
+    }
+    // Priority 4: Bluetooth Status
+    else {
         new_priority = PRIO_BLE;
-    } else if (led_state.ble_open) {
-        LOG_DBG("BLE open");
-        new_color = COLOR_YELLOW;
-        new_priority = PRIO_BLE;
-    } else {
-        LOG_DBG("No active state, turning LED off");
+        if (led_state.ble_connected) {
+            new_color = COLOR_BLUE;
+        } else {
+            new_color = COLOR_CYAN; // Open or not connected
+        }
+        k_timer_start(&led_state.blink_timer, K_MSEC(BLE_BLINK_INTERVAL), K_MSEC(BLE_BLINK_INTERVAL));
     }
 
-    // Apply if higher or equal priority
+    // Only update if new priority is higher/equal
     if (new_priority >= old_priority) {
-        LOG_DBG("Applying new state - Color:%d Priority:%d", new_color, new_priority);
         atomic_set(&led_state.current_color, new_color);
         atomic_set(&led_state.current_priority, new_priority);
-        
-        if (new_priority == PRIO_CRITICAL && led_state.low_battery_blink_enabled) {
-            LOG_DBG("Starting critical battery blink (enabled)");
-            k_timer_start(&led_state.blink_timer, K_MSEC(BLINK_INTERVAL_MS), K_MSEC(BLINK_INTERVAL_MS));
-        } else {
-            if (new_priority == PRIO_CRITICAL) {
-                LOG_DBG("Critical battery blink disabled, solid color");
-            }
-            k_timer_stop(&led_state.blink_timer);
-            set_led_color(new_color);
-        }
-    } else {
-        LOG_DBG("Keeping current state (higher priority)");
+        set_led_color(new_color);
     }
-    LOG_DBG("----------------------------------------");
 }
 
 /* Event Handlers */
@@ -312,41 +291,21 @@ static int led_init(const struct device *dev) {
     // Initialize hardware first
     if (init_leds() != 0) return -EIO;
 
-    // Stop all timers before initializing
+    // Initialize timers
     k_timer_init(&led_state.blink_timer, blink_handler, NULL);
-    k_timer_init(&led_state.rainbow_timer, rainbow_handler, NULL);
     k_timer_init(&led_state.debounce_timer, on_debounce, NULL);
 
-    k_timer_stop(&led_state.blink_timer);
-    k_timer_stop(&led_state.rainbow_timer);
-    k_timer_stop(&led_state.debounce_timer);
-
-    // Khởi tạo giá trị pin
-    uint8_t initial_battery = zmk_battery_state_of_charge();
-    led_state.battery_level = (initial_battery > 0) ? initial_battery : BATTERY_LEVEL_UNKNOWN;
-    LOG_DBG("Initial battery state: %s", 
-            (led_state.battery_level == BATTERY_LEVEL_UNKNOWN) ? "No battery" : "Battery present");
-
+    // Initialize states
+    led_state.battery_level = zmk_battery_state_of_charge();
     led_state.ble_connected = zmk_ble_active_profile_is_connected();
     led_state.ble_open = zmk_ble_active_profile_is_open();
-    led_state.caps_lock = zmk_hid_indicators_get_current_profile() & (1 << (HID_USAGE_LED_CAPS_LOCK - 1));
+    led_state.caps_lock = false;
 
-    LOG_DBG("Initial state - Battery:%d%% BLE:%d/%d Caps:%d",
-            led_state.battery_level, led_state.ble_connected,
-            led_state.ble_open, led_state.caps_lock);
-
-    // Run rainbow effect
-    LOG_DBG("Starting one-time rainbow boot effect");
-    for (int i = 0; i < ARRAY_SIZE(rainbow_colors); i++) {
-        set_led_color(rainbow_colors[i]);
-        k_msleep(RAINBOW_INTERVAL_MS);
-    }
-
-    // Ensure LED is OFF after rainbow
+    // Start with LED OFF
     set_led_color(COLOR_OFF);
-    k_msleep(100); // Short delay to ensure LED is off
+    k_msleep(100);
 
-    // Now apply the initial state
+    // Apply initial state
     update_led_state();
 
     return 0;

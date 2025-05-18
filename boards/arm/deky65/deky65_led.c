@@ -23,6 +23,19 @@ static const struct gpio_dt_spec LED_B = GPIO_DT_SPEC_GET(LED_NODE_B, gpios);
 
 static bool caps_lock_active = false;
 
+/* LED Color Test Definitions */
+#define TEST_DELAY_MS 500
+
+// Set specific colors (Common Anode: LOW = ON)
+static void set_color_off(void)   { set_led_rgb(false, false, false); }  // All OFF
+static void set_color_red(void)   { set_led_rgb(true, false, false); }   // Only R
+static void set_color_green(void) { set_led_rgb(false, true, false); }   // Only G
+static void set_color_blue(void)  { set_led_rgb(false, false, true); }   // Only B
+static void set_color_yellow(void){ set_led_rgb(true, true, false); }    // R+G
+static void set_color_cyan(void)  { set_led_rgb(false, true, true); }    // G+B
+static void set_color_purple(void){ set_led_rgb(true, false, true); }    // R+B
+static void set_color_white(void) { set_led_rgb(true, true, true); }     // All ON
+
 // Initialize GPIOs
 static int init_led_gpios(void) {
  int err;
@@ -93,17 +106,53 @@ ZMK_LISTENER(led_caps_lock_listener, led_caps_lock_listener);
 ZMK_SUBSCRIPTION(led_caps_lock_listener, zmk_hid_indicators_changed);
 
 // Test LED on boot
-static int led_test_init(const struct device *device) {
- LOG_DBG("Initializing LED GPIOs");
- int err = init_led_gpios();
- if (err) {
- LOG_ERR("Failed to initialize LED GPIOs: %d", err);
- return err;
- }
+static void run_led_test_sequence(void) {
+    LOG_DBG("Starting LED test sequence");
+    
+    LOG_DBG("Testing RED");
+    set_color_red();
+    k_msleep(TEST_DELAY_MS);
+    
+    LOG_DBG("Testing GREEN");
+    set_color_green();
+    k_msleep(TEST_DELAY_MS);
+    
+    LOG_DBG("Testing BLUE");
+    set_color_blue();
+    k_msleep(TEST_DELAY_MS);
+    
+    LOG_DBG("Testing YELLOW");
+    set_color_yellow();
+    k_msleep(TEST_DELAY_MS);
+    
+    LOG_DBG("Testing CYAN");
+    set_color_cyan();
+    k_msleep(TEST_DELAY_MS);
+    
+    LOG_DBG("Testing PURPLE");
+    set_color_purple();
+    k_msleep(TEST_DELAY_MS);
+    
+    LOG_DBG("Testing WHITE");
+    set_color_white();
+    k_msleep(TEST_DELAY_MS);
+    
+    LOG_DBG("Test complete - Setting to OFF");
+    set_color_off();
+}
 
- LOG_DBG("LED test on boot: Setting LED to White");
- set_led_rgb(true, true, true); // Bật LED trắng ngay khi khởi động
- return 0;
+static int led_test_init(const struct device *device) {
+    LOG_DBG("Initializing LED test");
+    
+    int err = init_led_gpios();
+    if (err) {
+        LOG_ERR("Failed to initialize LED GPIOs: %d", err);
+        return err;
+    }
+
+    // Run test sequence on boot
+    run_led_test_sequence();
+    return 0;
 }
 
 SYS_INIT(led_test_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);

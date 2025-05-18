@@ -1,1 +1,1 @@
-target_sources(app PRIVATE deky65_led_profile.c)
+target_sources(app PRIVATE deky65_indicator.c)

@@ -65,9 +65,9 @@
     };
 
     aliases {
-		ledgreen = &led_0;
-		ledred   = &led_1;
-		ledblue  = &led_2;
+		led_green = &led_0;
+		led_red   = &led_1;
+		led_blue  = &led_2;
 	};
 
     leds {

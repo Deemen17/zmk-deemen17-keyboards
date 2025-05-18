@@ -33,15 +33,21 @@ static const struct gpio_dt_spec LED_B = GPIO_DT_SPEC_GET(LED_NODE_B, gpios);
 #define COLOR_YELLOW   3 // Yellow (R=ON, G=ON, B=OFF)
 #define COLOR_RED      4 // Red (R=ON, G=OFF, B=OFF)
 #define COLOR_BLUE     5 // Blue (R=OFF, G=OFF, B=ON)
+#define COLOR_ORANGE   6 // Orange (R=ON, G=ON, B=OFF, same as Yellow)
+#define COLOR_PURPLE   7 // Purple (R=ON, G=OFF, B=ON)
 
 // Battery thresholds
 #define BATTERY_LEVEL_HIGH     50
-#define BATTERY_LEVEL_CRITICAL 20
+#define BATTERY_LEVEL_CRITICAL 10
 
 // Blink configuration
 #define BLINK_COUNT       3
 #define BLINK_ON_MS       250
 #define BLINK_OFF_MS      250
+
+// Rainbow effect configuration
+#define RAINBOW_BLINK_ON_MS   250
+#define RAINBOW_BLINK_OFF_MS  250
 
 // State variables
 static bool caps_lock_active = false;
@@ -120,6 +126,14 @@ static void set_led_rgb(uint8_t color, bool apply) {
             r = false; g = false; b = true;
             color_name = "Blue";
             break;
+        case COLOR_ORANGE:
+            r = true; g = true; b = false;
+            color_name = "Orange";
+            break;
+        case COLOR_PURPLE:
+            r = true; g = false; b = true;
+            color_name = "Purple";
+            break;
         case COLOR_OFF:
         default:
             r = false; g = false; b = false;
@@ -149,6 +163,28 @@ static void blink_led(uint8_t color) {
         set_led_rgb(COLOR_OFF, true);
         k_msleep(BLINK_OFF_MS);
     }
+}
+
+// Rainbow boot effect
+static void rainbow_boot_effect(void) {
+    LOG_DBG("Starting rainbow boot effect");
+    const uint8_t rainbow_colors[] = {
+        COLOR_RED,
+        COLOR_ORANGE,
+        COLOR_YELLOW,
+        COLOR_GREEN,
+        COLOR_BLUE,
+        COLOR_BLUE, // Indigo, using Blue
+        COLOR_PURPLE
+    };
+
+    for (int i = 0; i < 7; i++) {
+        set_led_rgb(rainbow_colors[i], true);
+        k_msleep(RAINBOW_BLINK_ON_MS);
+        set_led_rgb(COLOR_OFF, true);
+        k_msleep(RAINBOW_BLINK_OFF_MS);
+    }
+    LOG_DBG("Rainbow boot effect completed");
 }
 
 // Update LED state
@@ -264,8 +300,8 @@ static int connection_status_listener(const zmk_event_t *eh) {
         LOG_DBG("Bluetooth state changed - Connected: %d, Advertising: %d, Profile: %d, Cleared: %d",
                 ble_connected, ble_open, ble_active_profile, ble_profile_cleared);
 
-        indicate_connectivity();
         if (!caps_lock_active) {
+            indicate_connectivity();
             update_led_state(); // Update LED to off after blink if Caps Lock is off
         }
     }
@@ -285,8 +321,21 @@ static void led_process_thread(void *d0, void *d1, void *d2) {
     while (true) {
         struct led_state state;
         k_msgq_get(&led_msgq, &state, K_FOREVER);
+
+        // Prioritize Caps Lock: if active, force solid white
+        if (caps_lock_active && state.color != COLOR_WHITE) {
+            LOG_DBG("Caps Lock active, forcing solid White LED");
+            set_led_rgb(COLOR_WHITE, true);
+            continue;
+        }
+
+        // Process queued state
         if (state.blink) {
-            blink_led(state.color);
+            if (!caps_lock_active) {
+                blink_led(state.color);
+                // Restore Caps Lock state (off) after blink
+                set_led_rgb(COLOR_OFF, true);
+            }
         } else {
             set_led_rgb(state.color, true);
         }
@@ -318,13 +367,24 @@ static int led_init(const struct device *device) {
     LOG_DBG("Initial states - Caps Lock: %d, Battery: %d%%, BLE Connected: %d, BLE Advertising: %d, BLE Profile: %d, BLE Cleared: %d",
             caps_lock_active, battery_level, ble_connected, ble_open, ble_active_profile, ble_profile_cleared);
 
+    // Run rainbow boot effect if Caps Lock is off
+    if (!caps_lock_active) {
+        rainbow_boot_effect();
+    } else {
+        LOG_DBG("Caps Lock active, skipping rainbow boot effect");
+    }
+
     // Indicate battery on boot
-    indicate_battery();
-    k_msleep((BLINK_COUNT * (BLINK_ON_MS + BLINK_OFF_MS)) + 100); // Wait for battery blink to complete
+    if (!caps_lock_active) {
+        indicate_battery();
+        k_msleep((BLINK_COUNT * (BLINK_ON_MS + BLINK_OFF_MS)) + 100); // Wait for battery blink
+    }
 
     // Indicate Bluetooth on boot
-    indicate_connectivity();
-    k_msleep((BLINK_COUNT * (BLINK_ON_MS + BLINK_OFF_MS)) + 100); // Wait for BLE blink to complete
+    if (!caps_lock_active) {
+        indicate_connectivity();
+        k_msleep((BLINK_COUNT * (BLINK_ON_MS + BLINK_OFF_MS)) + 100); // Wait for BLE blink
+    }
 
     // Set initial LED state
     update_led_state();

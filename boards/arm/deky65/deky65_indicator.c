@@ -135,7 +135,7 @@ static void update_led_state(void) {
         new_priority = PRIO_CAPS_LOCK;
     }
     // Priority 3: Normal Battery
-    else if (led_state.battery_level <= 40) // Adjusted threshold
+    else if (led_state.battery_level <= 40) { // Adjusted threshold
         new_color = (led_state.battery_level <= 25) ? COLOR_YELLOW : COLOR_GREEN;
         new_priority = PRIO_BATTERY;
     }

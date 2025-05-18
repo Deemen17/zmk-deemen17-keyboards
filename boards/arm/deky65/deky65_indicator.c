@@ -118,12 +118,8 @@ static void blink_handler(struct k_timer *timer) {
 
 static const uint8_t rainbow_colors[] = {
     COLOR_RED,
-    COLOR_YELLOW,
     COLOR_GREEN,
-    COLOR_BLUE,
-    COLOR_CYAN,
-    COLOR_PURPLE,
-    COLOR_WHITE
+    COLOR_BLUE
 };
 
 /* Rainbow Effect */

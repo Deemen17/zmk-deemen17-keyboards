@@ -81,17 +81,25 @@ static int init_led_gpios(void) {
         return -ENODEV;
     }
 
-    err = gpio_pin_configure_dt(&LED_R, GPIO_OUTPUT_HIGH);
+    // Set all GPIOs to HIGH (OFF) initially
+    err = gpio_pin_set_dt(&LED_R, 1);
+    if (err) LOG_ERR("Failed to set LED_R (P1.10) HIGH: %d", err);
+    err = gpio_pin_set_dt(&LED_G, 1);
+    if (err) LOG_ERR("Failed to set LED_G (P1.11) HIGH: %d", err);
+    err = gpio_pin_set_dt(&LED_B, 1);
+    if (err) LOG_ERR("Failed to set LED_B (P0.03) HIGH: %d", err);
+
+    err = gpio_pin_configure_dt(&LED_R, GPIO_OUTPUT);
     if (err) {
         LOG_ERR("Failed to configure LED_R (P1.10): %d", err);
         return err;
     }
-    err = gpio_pin_configure_dt(&LED_G, GPIO_OUTPUT_HIGH);
+    err = gpio_pin_configure_dt(&LED_G, GPIO_OUTPUT);
     if (err) {
         LOG_ERR("Failed to configure LED_G (P1.11): %d", err);
         return err;
     }
-    err = gpio_pin_configure_dt(&LED_B, GPIO_OUTPUT_HIGH);
+    err = gpio_pin_configure_dt(&LED_B, GPIO_OUTPUT);
     if (err) {
         LOG_ERR("Failed to configure LED_B (P0.03): %d", err);
         return err;
@@ -247,9 +255,12 @@ static void indicate_connectivity(void) {
 
 // Caps Lock listener
 static int led_caps_lock_listener(const zmk_event_t *eh) {
+    LOG_DBG("Caps Lock event received");
     zmk_hid_indicators_t flags = zmk_hid_indicators_get_current_profile();
     unsigned int capsBit = 1 << (HID_USAGE_LED_CAPS_LOCK - 1);
     bool new_caps_state = (flags & capsBit) != 0;
+
+    LOG_DBG("Caps Lock flags: %d, new state: %d", flags, new_caps_state);
 
     if (new_caps_state != caps_lock_active) {
         caps_lock_active = new_caps_state;
@@ -265,6 +276,7 @@ ZMK_SUBSCRIPTION(led_caps_lock_listener, zmk_hid_indicators_changed);
 
 // Battery status listener
 static int battery_status_listener(const zmk_event_t *eh) {
+    LOG_DBG("Battery event received");
     const struct zmk_battery_state_changed *ev = as_zmk_battery_state_changed(eh);
     if (ev) {
         battery_level = ev->state_of_charge;
@@ -283,6 +295,7 @@ ZMK_SUBSCRIPTION(battery_status_listener, zmk_battery_state_changed);
 
 // Bluetooth connection status listener
 static int connection_status_listener(const zmk_event_t *eh) {
+    LOG_DBG("Bluetooth event received");
     bool new_ble_connected = zmk_ble_active_profile_is_connected();
     bool new_ble_open = zmk_ble_active_profile_is_open();
     uint8_t new_ble_profile = zmk_ble_active_profile_index();
@@ -300,9 +313,9 @@ static int connection_status_listener(const zmk_event_t *eh) {
         LOG_DBG("Bluetooth state changed - Connected: %d, Advertising: %d, Profile: %d, Cleared: %d",
                 ble_connected, ble_open, ble_active_profile, ble_profile_cleared);
 
+        indicate_connectivity();
         if (!caps_lock_active) {
-            indicate_connectivity();
-            update_led_state(); // Update LED to off after blink if Caps Lock is off
+            update_led_state(); // Update LED to off after blink
         }
     }
 
@@ -318,23 +331,21 @@ static void led_process_thread(void *d0, void *d1, void *d2) {
     ARG_UNUSED(d1);
     ARG_UNUSED(d2);
 
+    LOG_DBG("LED processing thread started");
     while (true) {
         struct led_state state;
-        k_msgq_get(&led_msgq, &state, K_FOREVER);
-
-        // Prioritize Caps Lock: if active, force solid white
-        if (caps_lock_active && state.color != COLOR_WHITE) {
-            LOG_DBG("Caps Lock active, forcing solid White LED");
-            set_led_rgb(COLOR_WHITE, true);
+        int ret = k_msgq_get(&led_msgq, &state, K_FOREVER);
+        if (ret) {
+            LOG_ERR("Failed to get message from queue: %d", ret);
             continue;
         }
 
-        // Process queued state
+        LOG_DBG("Processing LED state: color=%d, blink=%d", state.color, state.blink);
+
         if (state.blink) {
+            blink_led(state.color);
             if (!caps_lock_active) {
-                blink_led(state.color);
-                // Restore Caps Lock state (off) after blink
-                set_led_rgb(COLOR_OFF, true);
+                set_led_rgb(COLOR_OFF, true); // Ensure LED off after blink
             }
         } else {
             set_led_rgb(state.color, true);
@@ -343,19 +354,24 @@ static void led_process_thread(void *d0, void *d1, void *d2) {
 }
 
 K_THREAD_DEFINE(led_process_tid, 512, led_process_thread, NULL, NULL, NULL,
-                K_LOWEST_APPLICATION_THREAD_PRIO, 0, 100);
+                K_PRIO_PREEMPT(8), 0, 0);
 
 // Initialization
 static int led_init(const struct device *device) {
-    LOG_DBG("Initializing LED GPIOs");
+    LOG_DBG("Initializing LED subsystem");
     int err = init_led_gpios();
     if (err) {
         LOG_ERR("Failed to initialize LED GPIOs: %d", err);
         return err;
     }
 
+    // Run rainbow boot effect
+    rainbow_boot_effect();
+    set_led_rgb(COLOR_OFF, true); // Ensure LED off after rainbow
+
     // Get initial states
     battery_level = zmk_battery_state_of_charge();
+    LOG_DBG("Initial battery level: %d%%", battery_level);
     ble_connected = zmk_ble_active_profile_is_connected();
     ble_open = zmk_ble_active_profile_is_open();
     ble_active_profile = zmk_ble_active_profile_index();
@@ -367,24 +383,13 @@ static int led_init(const struct device *device) {
     LOG_DBG("Initial states - Caps Lock: %d, Battery: %d%%, BLE Connected: %d, BLE Advertising: %d, BLE Profile: %d, BLE Cleared: %d",
             caps_lock_active, battery_level, ble_connected, ble_open, ble_active_profile, ble_profile_cleared);
 
-    // Run rainbow boot effect if Caps Lock is off
-    if (!caps_lock_active) {
-        rainbow_boot_effect();
-    } else {
-        LOG_DBG("Caps Lock active, skipping rainbow boot effect");
-    }
-
     // Indicate battery on boot
-    if (!caps_lock_active) {
-        indicate_battery();
-        k_msleep((BLINK_COUNT * (BLINK_ON_MS + BLINK_OFF_MS)) + 100); // Wait for battery blink
-    }
+    indicate_battery();
+    k_msleep((BLINK_COUNT * (BLINK_ON_MS + BLINK_OFF_MS)) + 100); // Wait for battery blink
 
     // Indicate Bluetooth on boot
-    if (!caps_lock_active) {
-        indicate_connectivity();
-        k_msleep((BLINK_COUNT * (BLINK_ON_MS + BLINK_OFF_MS)) + 100); // Wait for BLE blink
-    }
+    indicate_connectivity();
+    k_msleep((BLINK_COUNT * (BLINK_ON_MS + BLINK_OFF_MS)) + 100); // Wait for BLE blink
 
     // Set initial LED state
     update_led_state();

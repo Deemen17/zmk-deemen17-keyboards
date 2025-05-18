@@ -80,8 +80,8 @@ static void set_led_rgb(bool r, bool g, bool b) {
 // Update LED based on current state
 static void update_led_state(void) {
     if (caps_lock_active) {
-        LOG_DBG("Caps Lock active, LED off");
-        set_led_rgb(false, false, false); // Off
+        LOG_DBG("Caps Lock active, LED on");
+        set_led_rgb(false, false, false); // White
     } else if (ble_profile_cleared) {
         LOG_DBG("BLE profile cleared, setting LED to Green");
         set_led_rgb(false, true, false); // Green

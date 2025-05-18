@@ -98,10 +98,11 @@ static void set_led_color(uint8_t color) {
     LOG_DBG("  GREEN: GPIO=%d (%s)", green, green ? "OFF" : "ON");
     LOG_DBG("  BLUE:  GPIO=%d (%s)", blue, blue ? "OFF" : "ON");
 
+    // Verify GPIO states after setting
     LOG_DBG("LED GPIO state after set:");
-    LOG_DBG("R:%d (port:%d pin:%d)", gpio_pin_get_dt(&led_r), led_r.port->base, led_r.pin);
-    LOG_DBG("G:%d (port:%d pin:%d)", gpio_pin_get_dt(&led_g), led_g.port->base, led_g.pin); 
-    LOG_DBG("B:%d (port:%d pin:%d)", gpio_pin_get_dt(&led_b), led_b.port->base, led_b.pin);
+    LOG_DBG("R pin %d = %d", led_r.pin, gpio_pin_get_dt(&led_r));
+    LOG_DBG("G pin %d = %d", led_g.pin, gpio_pin_get_dt(&led_g));
+    LOG_DBG("B pin %d = %d", led_b.pin, gpio_pin_get_dt(&led_b));
 }
 
 static void blink_handler(struct k_timer *timer) {
@@ -150,9 +151,9 @@ static int init_leds(void) {
     LOG_DBG("Initialized all LEDs to OFF state");
 
     LOG_DBG("LED GPIO config:");
-    LOG_DBG("RED: port:%d pin:%d", led_r.port->base, led_r.pin);
-    LOG_DBG("GREEN: port:%d pin:%d", led_g.port->base, led_g.pin);
-    LOG_DBG("BLUE: port:%d pin:%d", led_b.port->base, led_b.pin);
+    LOG_DBG("RED pin: %d", led_r.pin);
+    LOG_DBG("GREEN pin: %d", led_g.pin);
+    LOG_DBG("BLUE pin: %d", led_b.pin);
     
     // Reset state variables
     atomic_set(&led_state.current_color, COLOR_OFF);

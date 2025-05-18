@@ -1,1 +1,0 @@
-target_sources(app PRIVATE src/deky65_indicator.c)

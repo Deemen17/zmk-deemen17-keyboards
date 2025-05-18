@@ -65,22 +65,23 @@
     };
 
     aliases {
-		ledgreen = &led_0;
-		ledred   = &led_1;
-		ledblue  = &led_2;
+        led-red   = &led_0;
+		led-green = &led_1;
+		led-blue  = &led_2;
 	};
 
     leds {
         compatible = "gpio-leds";
         status = "okay";
-        led_0: led_green { 
-            gpios = <&gpio1 11 GPIO_ACTIVE_LOW>;
-            label = "Green LED"; 
-        };
 
-        led_1: led_red { 
+        led_0: led_red { 
             gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
             label = "Red LED";
+        };
+
+        led_1: led_green { 
+            gpios = <&gpio1 11 GPIO_ACTIVE_LOW>;
+            label = "Green LED"; 
         };
         
         led_2: led_blue { 
@@ -88,7 +89,7 @@
             label = "Blue LED";
         };
     };
-    
+
 };
 
 &gpio0 {

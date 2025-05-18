@@ -4,6 +4,8 @@ manifest:
       url-base: https://github.com/zmkfirmware
     - name: awkannan
       url-base: https://github.com/awkannan
+    - name: Deemen17
+      url-base: https://github.com/Deemen17
   projects:
     - name: zmk
       remote: zmkfirmware
@@ -11,6 +13,9 @@ manifest:
       import: app/west.yml
     - name: zmk-gpio-behavior
       remote: awkannan
+      revision: main
+    - name: zmk-rgbled-widget 
+      remote: Deemen17
       revision: main
   self:
     path: config

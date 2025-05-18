@@ -8,8 +8,6 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #include <zmk/hid_indicators.h>
 #include <zmk/events/hid_indicators_changed.h>
-#include <zmk/battery.h>
-#include <zmk/events/battery_state_changed.h>
 #include <zmk/ble.h>
 #include <zmk/events/ble_active_profile_changed.h>
 
@@ -28,13 +26,10 @@ static const struct gpio_dt_spec LED_B = GPIO_DT_SPEC_GET(LED_NODE_B, gpios);
 
 // State variables
 static bool caps_lock_active = false;
-static uint8_t battery_level = 0;
 static bool ble_connected = false;
 static bool ble_open = false;
-
-// Battery thresholds
-#define BATTERY_LEVEL_HIGH 50
-#define BATTERY_LEVEL_CRITICAL 10
+static bool ble_profile_cleared = false;
+static uint8_t ble_active_profile = 0;
 
 // Initialize GPIOs
 static int init_led_gpios(void) {
@@ -85,23 +80,17 @@ static void set_led_rgb(bool r, bool g, bool b) {
 // Update LED based on current state
 static void update_led_state(void) {
     if (caps_lock_active) {
-        LOG_DBG("Caps Lock active, setting LED to White");
-        set_led_rgb(true, true, true); // White
-    } else if (ble_connected) {
-        LOG_DBG("BLE connected, setting LED to Blue");
-        set_led_rgb(false, false, true); // Blue
-    } else if (ble_open) {
-        LOG_DBG("BLE advertising, setting LED to Yellow");
-        set_led_rgb(true, true, false); // Yellow
-    } else if (battery_level > BATTERY_LEVEL_HIGH) {
-        LOG_DBG("Battery high (>50%%), setting LED to Green");
+        LOG_DBG("Caps Lock active, LED off");
+        set_led_rgb(false, false, false); // Off
+    } else if (ble_profile_cleared) {
+        LOG_DBG("BLE profile cleared, setting LED to Green");
         set_led_rgb(false, true, false); // Green
-    } else if (battery_level > BATTERY_LEVEL_CRITICAL) {
-        LOG_DBG("Battery medium (11-50%%), setting LED to Yellow");
+    } else if (!ble_connected && !ble_open) {
+        LOG_DBG("BLE disconnected, setting LED to Yellow");
         set_led_rgb(true, true, false); // Yellow
     } else {
-        LOG_DBG("Battery critical (<=10%%), setting LED to Red");
-        set_led_rgb(true, false, false); // Red
+        LOG_DBG("Caps Lock off, BLE connected or advertising (profile %d), setting LED to Pink", ble_active_profile);
+        set_led_rgb(true, false, true); // Pink (for profile 0 connected or advertising)
     }
 }
 
@@ -123,29 +112,25 @@ static int led_caps_lock_listener(const zmk_event_t *eh) {
 ZMK_LISTENER(led_caps_lock_listener, led_caps_lock_listener);
 ZMK_SUBSCRIPTION(led_caps_lock_listener, zmk_hid_indicators_changed);
 
-// Battery status listener
-static int battery_status_listener(const zmk_event_t *eh) {
-    const struct zmk_battery_state_changed *ev = as_zmk_battery_state_changed(eh);
-    if (ev) {
-        battery_level = ev->state_of_charge;
-        LOG_DBG("Battery level changed: %d%%", battery_level);
-        update_led_state();
-    }
-    return ZMK_EV_EVENT_BUBBLE;
-}
-
-ZMK_LISTENER(battery_status_listener, battery_status_listener);
-ZMK_SUBSCRIPTION(battery_status_listener, zmk_battery_state_changed);
-
 // Bluetooth connection status listener
 static int connection_status_listener(const zmk_event_t *eh) {
     bool new_ble_connected = zmk_ble_active_profile_is_connected();
     bool new_ble_open = zmk_ble_active_profile_is_open();
+    uint8_t new_ble_profile = zmk_ble_active_profile_index();
 
-    if (new_ble_connected != ble_connected || new_ble_open != ble_open) {
+    // Detect profile clear: no connection, no advertising, and profile changed
+    bool new_ble_profile_cleared = !new_ble_connected && !new_ble_open;
+
+    if (new_ble_connected != ble_connected || new_ble_open != ble_open ||
+        new_ble_profile != ble_active_profile || new_ble_profile_cleared != ble_profile_cleared) {
         ble_connected = new_ble_connected;
         ble_open = new_ble_open;
-        LOG_DBG("BLE state changed - Connected: %d, Open: %d", ble_connected, ble_open);
+        ble_active_profile = new_ble_profile;
+        ble_profile_cleared = new_ble_profile_cleared;
+
+        LOG_DBG("BLE state changed - Connected: %d, Open: %d, Profile: %d, Cleared: %d",
+                ble_connected, ble_open, ble_active_profile, ble_profile_cleared);
+
         update_led_state();
     }
 
@@ -165,15 +150,16 @@ static int led_init(const struct device *device) {
     }
 
     // Get initial states
-    battery_level = zmk_battery_state_of_charge();
     ble_connected = zmk_ble_active_profile_is_connected();
     ble_open = zmk_ble_active_profile_is_open();
+    ble_active_profile = zmk_ble_active_profile_index();
+    ble_profile_cleared = !ble_connected && !ble_open;
     zmk_hid_indicators_t flags = zmk_hid_indicators_get_current_profile();
     unsigned int capsBit = 1 << (HID_USAGE_LED_CAPS_LOCK - 1);
     caps_lock_active = (flags & capsBit) != 0;
 
-    LOG_DBG("Initial states - Caps Lock: %d, Battery: %d%%, BLE Connected: %d, BLE Open: %d",
-            caps_lock_active, battery_level, ble_connected, ble_open);
+    LOG_DBG("Initial states - Caps Lock: %d, BLE Connected: %d, BLE Open: %d, BLE Profile: %d, BLE Cleared: %d",
+            caps_lock_active, ble_connected, ble_open, ble_active_profile, ble_profile_cleared);
 
     // Set initial LED state
     update_led_state();

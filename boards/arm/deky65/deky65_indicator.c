@@ -20,16 +20,16 @@ static const struct gpio_dt_spec led_r = GPIO_DT_SPEC_GET(LED_R_NODE, gpios);
 static const struct gpio_dt_spec led_g = GPIO_DT_SPEC_GET(LED_G_NODE, gpios);
 static const struct gpio_dt_spec led_b = GPIO_DT_SPEC_GET(LED_B_NODE, gpios);
 
-/* LED Color Definitions (Common Anode - 0=ON, 1=OFF) */
+/* LED Color Definitions (ACTIVE_HIGH) */
 enum led_color {
-    COLOR_OFF   = 0b111,  // R=1 G=1 B=1 -> Tất cả OFF
-    COLOR_RED   = 0b011,  // R=0 G=1 B=1 -> Chỉ RED ON
-    COLOR_GREEN = 0b101,  // R=1 G=0 B=1 -> Chỉ GREEN ON
-    COLOR_BLUE  = 0b110,  // R=1 G=1 B=0 -> Chỉ BLUE ON
-    COLOR_YELLOW= 0b001,  // R=0 G=0 B=1 -> RED+GREEN ON = YELLOW
-    COLOR_CYAN  = 0b100,  // R=1 G=0 B=0 -> GREEN+BLUE ON = CYAN  
-    COLOR_PURPLE= 0b010,  // R=0 G=1 B=0 -> RED+BLUE ON = PURPLE
-    COLOR_WHITE = 0b000   // R=0 G=0 B=0 -> Tất cả ON = WHITE
+    COLOR_OFF   = 0b000,  // R=0 G=0 B=0 -> Tất cả OFF
+    COLOR_RED   = 0b100,  // R=1 G=0 B=0 -> Chỉ RED ON  
+    COLOR_GREEN = 0b010,  // R=0 G=1 B=0 -> Chỉ GREEN ON
+    COLOR_BLUE  = 0b001,  // R=0 G=0 B=1 -> Chỉ BLUE ON
+    COLOR_YELLOW= 0b110,  // R=1 G=1 B=0 -> RED+GREEN ON = YELLOW
+    COLOR_CYAN  = 0b011,  // R=0 G=1 B=1 -> GREEN+BLUE ON = CYAN
+    COLOR_PURPLE= 0b101,  // R=1 G=0 B=1 -> RED+BLUE ON = PURPLE
+    COLOR_WHITE = 0b111   // R=1 G=1 B=1 -> Tất cả ON = WHITE
 };
 
 /* System Priorities */
@@ -68,40 +68,33 @@ static struct {
     bool low_battery_blink_enabled; 
 } led_state;
 
+/* LED Color Names for Debug */
+static const char* get_color_str(uint8_t color) {
+    switch(color) {
+        case COLOR_OFF: return "OFF (No LED)";
+        case COLOR_RED: return "RED";
+        case COLOR_GREEN: return "GREEN";
+        case COLOR_BLUE: return "BLUE";
+        case COLOR_YELLOW: return "YELLOW (RED+GREEN)";
+        case COLOR_CYAN: return "CYAN (GREEN+BLUE)";
+        case COLOR_PURPLE: return "PURPLE (RED+BLUE)";
+        case COLOR_WHITE: return "WHITE (ALL ON)";
+        default: return "UNKNOWN";
+    }
+}
+
 /* LED Control Functions */
 static void set_led_color(uint8_t color) {
-    const char* color_name;
-    switch(color) {
-        case COLOR_OFF: color_name = "OFF"; break;
-        case COLOR_RED: color_name = "RED"; break;
-        case COLOR_GREEN: color_name = "GREEN"; break;
-        case COLOR_BLUE: color_name = "BLUE"; break;
-        case COLOR_YELLOW: color_name = "YELLOW"; break;
-        case COLOR_CYAN: color_name = "CYAN"; break;
-        case COLOR_PURPLE: color_name = "PURPLE"; break;
-        case COLOR_WHITE: color_name = "WHITE"; break;
-        default: color_name = "UNKNOWN"; break;
-    }
+    const char* color_str = get_color_str(color);
     
-     
-    
-    LOG_DBG("LED Color Change:");
-    LOG_DBG("- Color: %s (0b%d%d%d)", color_name, red, green, blue);
-    LOG_DBG("- Setting pins (Common Anode - Active LOW):");
+    // Extract bits for each LED (ACTIVE_HIGH)
+    bool red = (color >> 2) & 1;    // MSB
+    bool green = (color >> 1) & 1;  // Middle bit
+    bool blue = color & 1;          // LSB
     
     gpio_pin_set_dt(&led_r, red);
     gpio_pin_set_dt(&led_g, green);
     gpio_pin_set_dt(&led_b, blue);
-    
-    LOG_DBG("  RED:   GPIO=%d (%s)", red, red ? "OFF" : "ON");
-    LOG_DBG("  GREEN: GPIO=%d (%s)", green, green ? "OFF" : "ON");
-    LOG_DBG("  BLUE:  GPIO=%d (%s)", blue, blue ? "OFF" : "ON");
-
-    // Verify GPIO states after setting
-    LOG_DBG("LED GPIO state after set:");
-    LOG_DBG("R pin %d = %d", led_r.pin, gpio_pin_get_dt(&led_r));
-    LOG_DBG("G pin %d = %d", led_g.pin, gpio_pin_get_dt(&led_g));
-    LOG_DBG("B pin %d = %d", led_b.pin, gpio_pin_get_dt(&led_b));
 }
 
 static void blink_handler(struct k_timer *timer) {
@@ -171,43 +164,33 @@ static void update_led_state(void) {
 
     // Priority 1: Caps Lock (Highest)
     if (led_state.caps_lock) {
-        new_color = COLOR_WHITE;
+        LOG_DBG("Caps Lock ON - Setting WHITE");
+        new_color = COLOR_WHITE;     // 0b111 for ACTIVE_HIGH
         new_priority = PRIO_CAPS;
+        k_timer_stop(&led_state.blink_timer);  // Ensure no blinking
+    } else {
+        LOG_DBG("Caps Lock OFF - Setting LED OFF");
+        new_color = COLOR_OFF;       // 0b000 for ACTIVE_HIGH
+        new_priority = PRIO_IDLE;    // Reset priority
         k_timer_stop(&led_state.blink_timer);
-    }
-    // Priority 2: Critical Battery (<10%) overrides everything except Caps
-    else if (led_state.battery_level < BATTERY_CRITICAL_THRESHOLD) {
-        new_color = COLOR_RED;
-        new_priority = PRIO_BATTERY;
-        k_timer_stop(&led_state.blink_timer);
-    }
-    // Priority 3: Normal Battery Status
-    else if (led_state.battery_level >= BATTERY_CRITICAL_THRESHOLD) {
-        if (led_state.battery_level >= BATTERY_LOW_THRESHOLD) {
-            new_color = COLOR_GREEN;
-        } else {
-            new_color = COLOR_YELLOW;
-        }
-        new_priority = PRIO_BATTERY;
-        k_timer_stop(&led_state.blink_timer);
-    }
-    // Priority 4: Bluetooth Status
-    else {
-        new_priority = PRIO_BLE;
-        if (led_state.ble_connected) {
-            new_color = COLOR_BLUE;
-        } else {
-            new_color = COLOR_CYAN; // Open or not connected
-        }
-        k_timer_start(&led_state.blink_timer, K_MSEC(BLE_BLINK_INTERVAL), K_MSEC(BLE_BLINK_INTERVAL));
     }
 
+    // Immediately apply Caps Lock state changes
+    LOG_DBG("Applying LED state - Color: %d", new_color);
+    atomic_set(&led_state.current_color, new_color);
+    atomic_set(&led_state.current_priority, new_priority);
+    set_led_color(new_color);
+    
     // Only update if new priority is higher/equal
     if (new_priority >= old_priority) {
         atomic_set(&led_state.current_color, new_color);
         atomic_set(&led_state.current_priority, new_priority);
         set_led_color(new_color);
     }
+
+    LOG_DBG("LED State Change:");
+    LOG_DBG("  From: %s", get_color_str(old_color));
+    LOG_DBG("  To:   %s", get_color_str(new_color));
 }
 
 /* Event Handlers */

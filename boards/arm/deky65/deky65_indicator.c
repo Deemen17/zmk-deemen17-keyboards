@@ -46,6 +46,9 @@ enum led_priority {
 #define RAINBOW_INTERVAL_MS 400
 #define DEBOUNCE_MS        500
 
+/* Function Declarations */
+static void set_led_color(uint8_t color);
+
 /* Global State */
 static struct {
     atomic_t current_color;
@@ -59,33 +62,7 @@ static struct {
     bool ble_open;
 } led_state;
 
-/* LED Hardware Initialization */
-static int init_leds(void) {
-    int ret = 0;
-    
-    if (!device_is_ready(led_r.port) || 
-        !device_is_ready(led_g.port) || 
-        !device_is_ready(led_b.port)) {
-        LOG_ERR("LED GPIO devices not ready");
-        return -ENODEV;
-    }
-
-    // Configure pins as active high outputs
-    ret |= gpio_pin_configure_dt(&led_r, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
-    ret |= gpio_pin_configure_dt(&led_g, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
-    ret |= gpio_pin_configure_dt(&led_b, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
-    
-    // Reset LED state
-    atomic_set(&led_state.current_color, COLOR_OFF);
-    atomic_set(&led_state.current_priority, PRIO_IDLE);
-    
-    // Start with all LEDs off (Common Anode: HIGH = OFF)
-    set_led_color(COLOR_OFF);
-    
-    return ret;
-}
-
-/* LED Control Function */
+/* LED Control Functions */
 static void set_led_color(uint8_t color) {
     const char* color_name;
     switch(color) {
@@ -117,7 +94,6 @@ static void set_led_color(uint8_t color) {
     LOG_DBG("  BLUE:  GPIO=%d (%s)", blue, blue ? "OFF" : "ON");
 }
 
-/* Blink Handler */
 static void blink_handler(struct k_timer *timer) {
     static bool led_on = false;
     led_on = !led_on;
@@ -138,6 +114,32 @@ static const uint8_t rainbow_colors[] = {
 static void rainbow_handler(struct k_timer *timer) {
     static uint8_t rainbow_pos = 0;
     set_led_color(rainbow_colors[rainbow_pos++ % ARRAY_SIZE(rainbow_colors)]);
+}
+
+/* LED Hardware Initialization */
+static int init_leds(void) {
+    int ret = 0;
+    
+    if (!device_is_ready(led_r.port) || 
+        !device_is_ready(led_g.port) || 
+        !device_is_ready(led_b.port)) {
+        LOG_ERR("LED GPIO devices not ready");
+        return -ENODEV;
+    }
+
+    // Configure pins as active high outputs
+    ret |= gpio_pin_configure_dt(&led_r, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
+    ret |= gpio_pin_configure_dt(&led_g, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
+    ret |= gpio_pin_configure_dt(&led_b, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
+    
+    // Reset LED state
+    atomic_set(&led_state.current_color, COLOR_OFF);
+    atomic_set(&led_state.current_priority, PRIO_IDLE);
+    
+    // Start with all LEDs off (Common Anode: HIGH = OFF)
+    set_led_color(COLOR_OFF);
+    
+    return ret;
 }
 
 /* Update LED State Based on Priority */
@@ -269,16 +271,18 @@ static int led_init(const struct device *dev) {
     k_timer_init(&led_state.rainbow_timer, rainbow_handler, NULL);
     k_timer_init(&led_state.debounce_timer, on_debounce, NULL);
 
-    // Clear any existing LED state
+    // Clear any existing timer state
     k_timer_stop(&led_state.blink_timer);
     k_timer_stop(&led_state.rainbow_timer);
     k_timer_stop(&led_state.debounce_timer);
 
-    // Rainbow boot effect
-    LOG_DBG("Starting rainbow boot effect");
-    k_timer_start(&led_state.rainbow_timer, K_MSEC(RAINBOW_INTERVAL_MS), K_MSEC(RAINBOW_INTERVAL_MS));
-    k_msleep(ARRAY_SIZE(rainbow_colors) * RAINBOW_INTERVAL_MS * 2);
-    k_timer_stop(&led_state.rainbow_timer);
+    // Display rainbow effect once
+    LOG_DBG("Starting one-time rainbow boot effect");
+    for (int i = 0; i < ARRAY_SIZE(rainbow_colors); i++) {
+        set_led_color(rainbow_colors[i]);
+        k_msleep(RAINBOW_INTERVAL_MS);
+    }
+    set_led_color(COLOR_OFF);
 
     // Get initial states
     led_state.battery_level = zmk_battery_state_of_charge();

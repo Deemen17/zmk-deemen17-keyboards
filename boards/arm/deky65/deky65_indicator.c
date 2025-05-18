@@ -47,8 +47,8 @@ enum led_priority {
 #define DEBOUNCE_MS        500
 
 /* Config Options */
-#define LED_BLINK_ON_LOW_BATTERY 0  // Đã tắt nhấp nháy
-#define BATTERY_LEVEL_UNKNOWN 0    // Đúng giá trị khi không pin
+#define LED_BLINK_ON_LOW_BATTERY 0  // 0/1 for enable/disable blink on low battery
+#define BATTERY_LEVEL_UNKNOWN 0    // 0/1 for enable/disable battery 
 
 /* Function Declarations */
 static void set_led_color(uint8_t color);
@@ -64,7 +64,7 @@ static struct {
     bool caps_lock;
     bool ble_connected;
     bool ble_open;
-    bool low_battery_blink_enabled;  // New: Control blink feature
+    bool low_battery_blink_enabled; 
 } led_state;
 
 /* LED Control Functions */
@@ -97,6 +97,11 @@ static void set_led_color(uint8_t color) {
     LOG_DBG("  RED:   GPIO=%d (%s)", red, red ? "OFF" : "ON");
     LOG_DBG("  GREEN: GPIO=%d (%s)", green, green ? "OFF" : "ON");
     LOG_DBG("  BLUE:  GPIO=%d (%s)", blue, blue ? "OFF" : "ON");
+
+    LOG_DBG("LED GPIO state after set:");
+    LOG_DBG("R:%d (port:%d pin:%d)", gpio_pin_get_dt(&led_r), led_r.port->base, led_r.pin);
+    LOG_DBG("G:%d (port:%d pin:%d)", gpio_pin_get_dt(&led_g), led_g.port->base, led_g.pin); 
+    LOG_DBG("B:%d (port:%d pin:%d)", gpio_pin_get_dt(&led_b), led_b.port->base, led_b.pin);
 }
 
 static void blink_handler(struct k_timer *timer) {
@@ -144,6 +149,11 @@ static int init_leds(void) {
 
     LOG_DBG("Initialized all LEDs to OFF state");
 
+    LOG_DBG("LED GPIO config:");
+    LOG_DBG("RED: port:%d pin:%d", led_r.port->base, led_r.pin);
+    LOG_DBG("GREEN: port:%d pin:%d", led_g.port->base, led_g.pin);
+    LOG_DBG("BLUE: port:%d pin:%d", led_b.port->base, led_b.pin);
+    
     // Reset state variables
     atomic_set(&led_state.current_color, COLOR_OFF);
     atomic_set(&led_state.current_priority, PRIO_IDLE);

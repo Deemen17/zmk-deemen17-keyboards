@@ -20,16 +20,16 @@ static const struct gpio_dt_spec led_r = GPIO_DT_SPEC_GET(LED_R_NODE, gpios);
 static const struct gpio_dt_spec led_g = GPIO_DT_SPEC_GET(LED_G_NODE, gpios);
 static const struct gpio_dt_spec led_b = GPIO_DT_SPEC_GET(LED_B_NODE, gpios);
 
-/* LED Color Definitions (Common Anode + GPIO_ACTIVE_LOW) */
+/* LED Color Definitions (Common Anode - 0=ON, 1=OFF) */
 enum led_color {
-    COLOR_OFF   = 0b111,  // All LEDs OFF (GPIO=1)
-    COLOR_RED   = 0b011,  // Red ON (GPIO=0), Green/Blue OFF
-    COLOR_GREEN = 0b101,  // Green ON, Red/Blue OFF
-    COLOR_BLUE  = 0b110,  // Blue ON, Red/Green OFF
-    COLOR_YELLOW= 0b001,  // Red+Green ON (GPIO=0), Blue OFF
-    COLOR_CYAN  = 0b100,  // Green+Blue ON, Red OFF
-    COLOR_PURPLE= 0b010,  // Red+Blue ON, Green OFF
-    COLOR_WHITE = 0b000   // All LEDs ON (GPIO=0)
+    COLOR_OFF   = 0b111,  // R=1 G=1 B=1 -> Tất cả OFF
+    COLOR_RED   = 0b011,  // R=0 G=1 B=1 -> Chỉ RED ON
+    COLOR_GREEN = 0b101,  // R=1 G=0 B=1 -> Chỉ GREEN ON
+    COLOR_BLUE  = 0b110,  // R=1 G=1 B=0 -> Chỉ BLUE ON
+    COLOR_YELLOW= 0b001,  // R=0 G=0 B=1 -> RED+GREEN ON = YELLOW
+    COLOR_CYAN  = 0b100,  // R=1 G=0 B=0 -> GREEN+BLUE ON = CYAN  
+    COLOR_PURPLE= 0b010,  // R=0 G=1 B=0 -> RED+BLUE ON = PURPLE
+    COLOR_WHITE = 0b000   // R=0 G=0 B=0 -> Tất cả ON = WHITE
 };
 
 /* System Priorities */
@@ -127,17 +127,17 @@ static int init_leds(void) {
         return -ENODEV;
     }
 
-    // Chỉ cấu hình là output, không thêm flag
+    // Configure as simple outputs
     ret |= gpio_pin_configure_dt(&led_r, GPIO_OUTPUT);
     ret |= gpio_pin_configure_dt(&led_g, GPIO_OUTPUT); 
     ret |= gpio_pin_configure_dt(&led_b, GPIO_OUTPUT);
     
-    // Đặt tất cả LED về trạng thái OFF (HIGH for Common Anode)
+    LOG_DBG("Setting initial LED state to OFF");
+    // Force all LEDs OFF (HIGH for Common Anode)
     gpio_pin_set_dt(&led_r, 1);
     gpio_pin_set_dt(&led_g, 1);
     gpio_pin_set_dt(&led_b, 1);
 
-    // Reset state
     atomic_set(&led_state.current_color, COLOR_OFF);
     atomic_set(&led_state.current_priority, PRIO_IDLE);
     
@@ -146,6 +146,11 @@ static int init_leds(void) {
 
 /* Update LED State Based on Priority */
 static void update_led_state(void) {
+    uint8_t old_color = atomic_get(&led_state.current_color);
+    enum led_priority old_priority = atomic_get(&led_state.current_priority);
+    
+    LOG_DBG("Update LED - Current: Color=%d Priority=%d", old_color, old_priority);
+
     uint8_t new_color = COLOR_OFF;
     enum led_priority new_priority = PRIO_IDLE;
 

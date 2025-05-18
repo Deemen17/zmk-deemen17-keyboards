@@ -46,6 +46,9 @@ enum led_priority {
 #define RAINBOW_INTERVAL_MS 400
 #define DEBOUNCE_MS        500
 
+/* Config Options */
+#define LED_BLINK_ON_LOW_BATTERY 0  // Set to 0 to disable blinking on low battery
+
 /* Function Declarations */
 static void set_led_color(uint8_t color);
 
@@ -60,6 +63,7 @@ static struct {
     bool caps_lock;
     bool ble_connected;
     bool ble_open;
+    bool low_battery_blink_enabled;  // New: Control blink feature
 } led_state;
 
 /* LED Control Functions */
@@ -143,6 +147,9 @@ static int init_leds(void) {
     atomic_set(&led_state.current_color, COLOR_OFF);
     atomic_set(&led_state.current_priority, PRIO_IDLE);
 
+    // Initialize feature flags
+    led_state.low_battery_blink_enabled = LED_BLINK_ON_LOW_BATTERY;
+    
     return ret;
 }
 
@@ -169,10 +176,10 @@ static void update_led_state(void) {
         new_color = COLOR_RED;
         new_priority = PRIO_CRITICAL;
     }
-    // Priority 2: Caps Lock
+    // Priority 2: Caps Lock (WHITE)
     else if (led_state.caps_lock) {
-        LOG_DBG("Caps Lock active");
-        new_color = COLOR_WHITE;
+        LOG_DBG("Caps Lock active - LED ON WHITE");
+        new_color = COLOR_WHITE;  // 0b000 = R,G,B đều ON
         new_priority = PRIO_CAPS_LOCK;
     }
     // Priority 3: Normal Battery
@@ -197,11 +204,16 @@ static void update_led_state(void) {
     // Apply if higher or equal priority
     if (new_priority >= old_priority) {
         LOG_DBG("Applying new state - Color:%d Priority:%d", new_color, new_priority);
-        if (new_priority == PRIO_CRITICAL) {
-            LOG_DBG("Starting critical battery blink");
+        atomic_set(&led_state.current_color, new_color);
+        atomic_set(&led_state.current_priority, new_priority);
+        
+        if (new_priority == PRIO_CRITICAL && led_state.low_battery_blink_enabled) {
+            LOG_DBG("Starting critical battery blink (enabled)");
             k_timer_start(&led_state.blink_timer, K_MSEC(BLINK_INTERVAL_MS), K_MSEC(BLINK_INTERVAL_MS));
         } else {
-            LOG_DBG("Normal LED state, stopping blink");
+            if (new_priority == PRIO_CRITICAL) {
+                LOG_DBG("Critical battery blink disabled, solid color");
+            }
             k_timer_stop(&led_state.blink_timer);
             set_led_color(new_color);
         }
@@ -214,17 +226,22 @@ static void update_led_state(void) {
 /* Event Handlers */
 static int on_caps_lock(const zmk_event_t *eh) {
     bool new_state = zmk_hid_indicators_get_current_profile() & (1 << (HID_USAGE_LED_CAPS_LOCK - 1));
-    LOG_DBG("Caps Lock event detected");
-    LOG_DBG("Previous Caps Lock state: %d", led_state.caps_lock);
-    LOG_DBG("New Caps Lock state: %d", new_state);
+    LOG_DBG("============ CAPS LOCK EVENT ============");
+    LOG_DBG("Previous state: %d", led_state.caps_lock);
+    LOG_DBG("New state: %d", new_state);
+    LOG_DBG("Current LED color: %d", atomic_get(&led_state.current_color));
     
     if (new_state != led_state.caps_lock) {
-        LOG_DBG("Caps Lock state changed from %d to %d", led_state.caps_lock, new_state);
+        LOG_DBG("State changed: %d -> %d", led_state.caps_lock, new_state);
         led_state.caps_lock = new_state;
+        if (new_state) {
+            LOG_DBG("CAPS LOCK ON -> Setting WHITE");
+        } else {
+            LOG_DBG("CAPS LOCK OFF -> Restoring previous state");
+        }
         update_led_state();
-    } else {
-        LOG_DBG("Caps Lock state unchanged");
     }
+    LOG_DBG("========================================");
     return ZMK_EV_EVENT_BUBBLE;
 }
 

@@ -96,8 +96,13 @@ static void set_led_color(uint8_t color) {
 
 static void blink_handler(struct k_timer *timer) {
     static bool led_on = false;
+    uint8_t current_color = atomic_get(&led_state.current_color);
+    enum led_priority current_priority = atomic_get(&led_state.current_priority);
+    
     led_on = !led_on;
-    set_led_color(led_on ? atomic_get(&led_state.current_color) : COLOR_OFF);
+    LOG_DBG("BLINK - State:%s Color:%d Priority:%d", 
+            led_on ? "ON" : "OFF", current_color, current_priority);
+    set_led_color(led_on ? current_color : COLOR_OFF);
 }
 
 static const uint8_t rainbow_colors[] = {
@@ -119,7 +124,7 @@ static void rainbow_handler(struct k_timer *timer) {
 /* LED Hardware Initialization */
 static int init_leds(void) {
     int ret = 0;
-    
+
     if (!device_is_ready(led_r.port) || 
         !device_is_ready(led_g.port) || 
         !device_is_ready(led_b.port)) {
@@ -127,20 +132,17 @@ static int init_leds(void) {
         return -ENODEV;
     }
 
-    // Configure as simple outputs
-    ret |= gpio_pin_configure_dt(&led_r, GPIO_OUTPUT);
-    ret |= gpio_pin_configure_dt(&led_g, GPIO_OUTPUT); 
-    ret |= gpio_pin_configure_dt(&led_b, GPIO_OUTPUT);
-    
-    LOG_DBG("Setting initial LED state to OFF");
-    // Force all LEDs OFF (HIGH for Common Anode)
-    gpio_pin_set_dt(&led_r, 1);
-    gpio_pin_set_dt(&led_g, 1);
-    gpio_pin_set_dt(&led_b, 1);
+    // Configure as outputs with initial state HIGH (LED OFF)
+    ret |= gpio_pin_configure_dt(&led_r, GPIO_OUTPUT | GPIO_OUTPUT_INIT_HIGH);
+    ret |= gpio_pin_configure_dt(&led_g, GPIO_OUTPUT | GPIO_OUTPUT_INIT_HIGH);
+    ret |= gpio_pin_configure_dt(&led_b, GPIO_OUTPUT | GPIO_OUTPUT_INIT_HIGH);
 
+    LOG_DBG("Initialized all LEDs to OFF state");
+
+    // Reset state variables
     atomic_set(&led_state.current_color, COLOR_OFF);
     atomic_set(&led_state.current_priority, PRIO_IDLE);
-    
+
     return ret;
 }
 
@@ -149,16 +151,17 @@ static void update_led_state(void) {
     uint8_t old_color = atomic_get(&led_state.current_color);
     enum led_priority old_priority = atomic_get(&led_state.current_priority);
     
-    LOG_DBG("Update LED - Current: Color=%d Priority=%d", old_color, old_priority);
+    LOG_DBG("------------ LED STATE UPDATE ------------");
+    LOG_DBG("Previous state - Color:%d Priority:%d", old_color, old_priority);
+    LOG_DBG("Battery: %d%% | Caps: %d | BLE: conn=%d open=%d", 
+            led_state.battery_level, led_state.caps_lock,
+            led_state.ble_connected, led_state.ble_open);
+    LOG_DBG("Active timers - Blink:%d Rainbow:%d", 
+            k_timer_remaining_get(&led_state.blink_timer),
+            k_timer_remaining_get(&led_state.rainbow_timer));
 
     uint8_t new_color = COLOR_OFF;
     enum led_priority new_priority = PRIO_IDLE;
-
-    LOG_DBG("Current LED Priority: %d", atomic_get(&led_state.current_priority));
-    LOG_DBG("Current LED Color: %d", atomic_get(&led_state.current_color));
-    LOG_DBG("Updating LED state - Battery:%d%% Caps:%d BLE:%d/%d", 
-            led_state.battery_level, led_state.caps_lock,
-            led_state.ble_connected, led_state.ble_open);
 
     // Priority 1: Critical Battery
     if (led_state.battery_level <= 10) {
@@ -192,19 +195,20 @@ static void update_led_state(void) {
     }
 
     // Apply if higher or equal priority
-    if (new_priority >= atomic_get(&led_state.current_priority)) {
-        LOG_DBG("New LED state - Color:%d Priority:%d", new_color, new_priority);
-        atomic_set(&led_state.current_color, new_color);
-        atomic_set(&led_state.current_priority, new_priority);
-        
+    if (new_priority >= old_priority) {
+        LOG_DBG("Applying new state - Color:%d Priority:%d", new_color, new_priority);
         if (new_priority == PRIO_CRITICAL) {
-            LOG_DBG("Starting blink timer for critical battery");
+            LOG_DBG("Starting critical battery blink");
             k_timer_start(&led_state.blink_timer, K_MSEC(BLINK_INTERVAL_MS), K_MSEC(BLINK_INTERVAL_MS));
         } else {
+            LOG_DBG("Normal LED state, stopping blink");
             k_timer_stop(&led_state.blink_timer);
             set_led_color(new_color);
         }
+    } else {
+        LOG_DBG("Keeping current state (higher priority)");
     }
+    LOG_DBG("----------------------------------------");
 }
 
 /* Event Handlers */
@@ -271,27 +275,19 @@ static int led_init(const struct device *dev) {
     LOG_DBG("Initializing LED controller");
     ARG_UNUSED(dev);
     
+    // Initialize hardware first
     if (init_leds() != 0) return -EIO;
 
-    // Initialize timers
+    // Stop all timers before initializing
     k_timer_init(&led_state.blink_timer, blink_handler, NULL);
     k_timer_init(&led_state.rainbow_timer, rainbow_handler, NULL);
     k_timer_init(&led_state.debounce_timer, on_debounce, NULL);
 
-    // Clear any existing timer state
     k_timer_stop(&led_state.blink_timer);
     k_timer_stop(&led_state.rainbow_timer);
     k_timer_stop(&led_state.debounce_timer);
 
-    // Display rainbow effect once
-    LOG_DBG("Starting one-time rainbow boot effect");
-    for (int i = 0; i < ARRAY_SIZE(rainbow_colors); i++) {
-        set_led_color(rainbow_colors[i]);
-        k_msleep(RAINBOW_INTERVAL_MS);
-    }
-    set_led_color(COLOR_OFF);
-
-    // Get initial states
+    // Get initial states before any effects
     led_state.battery_level = zmk_battery_state_of_charge();
     led_state.ble_connected = zmk_ble_active_profile_is_connected();
     led_state.ble_open = zmk_ble_active_profile_is_open();
@@ -301,7 +297,18 @@ static int led_init(const struct device *dev) {
             led_state.battery_level, led_state.ble_connected,
             led_state.ble_open, led_state.caps_lock);
 
-    // Apply initial state
+    // Run rainbow effect
+    LOG_DBG("Starting one-time rainbow boot effect");
+    for (int i = 0; i < ARRAY_SIZE(rainbow_colors); i++) {
+        set_led_color(rainbow_colors[i]);
+        k_msleep(RAINBOW_INTERVAL_MS);
+    }
+
+    // Ensure LED is OFF after rainbow
+    set_led_color(COLOR_OFF);
+    k_msleep(100); // Short delay to ensure LED is off
+
+    // Now apply the initial state
     update_led_state();
 
     return 0;

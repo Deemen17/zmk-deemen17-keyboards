@@ -127,17 +127,19 @@ static int init_leds(void) {
         return -ENODEV;
     }
 
-    // Configure pins as active high outputs
-    ret |= gpio_pin_configure_dt(&led_r, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
-    ret |= gpio_pin_configure_dt(&led_g, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
-    ret |= gpio_pin_configure_dt(&led_b, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
+    // Chỉ cấu hình là output, không thêm flag
+    ret |= gpio_pin_configure_dt(&led_r, GPIO_OUTPUT);
+    ret |= gpio_pin_configure_dt(&led_g, GPIO_OUTPUT); 
+    ret |= gpio_pin_configure_dt(&led_b, GPIO_OUTPUT);
     
-    // Reset LED state
+    // Đặt tất cả LED về trạng thái OFF (HIGH for Common Anode)
+    gpio_pin_set_dt(&led_r, 1);
+    gpio_pin_set_dt(&led_g, 1);
+    gpio_pin_set_dt(&led_b, 1);
+
+    // Reset state
     atomic_set(&led_state.current_color, COLOR_OFF);
     atomic_set(&led_state.current_priority, PRIO_IDLE);
-    
-    // Start with all LEDs off (Common Anode: HIGH = OFF)
-    set_led_color(COLOR_OFF);
     
     return ret;
 }

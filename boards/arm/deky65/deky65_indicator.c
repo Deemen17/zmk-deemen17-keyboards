@@ -121,7 +121,7 @@ static int led_caps_lock_listener(const zmk_event_t *eh) {
 }
 
 ZMK_LISTENER(led_caps_lock_listener, led_caps_lock_listener);
-ZMK_SUBscription(led_caps_lock_listener, zmk_hid_indicators_changed);
+ZMK_SUBSCRIPTION(led_caps_lock_listener, zmk_hid_indicators_changed);
 
 // Battery status listener
 static int battery_status_listener(const zmk_event_t *eh) {
@@ -135,7 +135,7 @@ static int battery_status_listener(const zmk_event_t *eh) {
 }
 
 ZMK_LISTENER(battery_status_listener, battery_status_listener);
-ZMK_SUBscription(battery_status_listener, zmk_battery_state_changed);
+ZMK_SUBSCRIPTION(battery_status_listener, zmk_battery_state_changed);
 
 // Bluetooth connection status listener
 static int connection_status_listener(const zmk_event_t *eh) {
@@ -153,7 +153,7 @@ static int connection_status_listener(const zmk_event_t *eh) {
 }
 
 ZMK_LISTENER(connection_status_listener, connection_status_listener);
-ZMK_SUBscription(connection_status_listener, zmk_ble_active_profile_changed);
+ZMK_SUBSCRIPTION(connection_status_listener, zmk_ble_active_profile_changed);
 
 // Initialization
 static int led_init(const struct device *device) {

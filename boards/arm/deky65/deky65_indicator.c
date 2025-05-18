@@ -96,19 +96,20 @@ static void blink_handler(struct k_timer *timer) {
     set_led_color(led_on ? atomic_get(&led_state.current_color) : COLOR_OFF);
 }
 
+static const uint8_t rainbow_colors[] = {
+    COLOR_RED,
+    COLOR_YELLOW,
+    COLOR_GREEN,
+    COLOR_BLUE,
+    COLOR_CYAN,
+    COLOR_PURPLE,
+    COLOR_WHITE
+};
+
 /* Rainbow Effect */
 static void rainbow_handler(struct k_timer *timer) {
     static uint8_t rainbow_pos = 0;
-    const uint8_t rainbow[] = {
-        COLOR_RED,
-        COLOR_YELLOW,
-        COLOR_GREEN,
-        COLOR_CYAN,
-        COLOR_BLUE,
-        COLOR_PURPLE,
-        COLOR_WHITE
-    };
-    set_led_color(rainbow[rainbow_pos++ % ARRAY_SIZE(rainbow)]);
+    set_led_color(rainbow_colors[rainbow_pos++ % ARRAY_SIZE(rainbow_colors)]);
 }
 
 /* Update LED State Based on Priority */
@@ -212,20 +213,16 @@ static void test_leds(void) {
 static int led_init(const struct device *dev) {
     ARG_UNUSED(dev);
     
-    if (init_leds() != 0) {
-        LOG_ERR("Failed to initialize LEDs");
-        return -EIO;
-    }
+    if (init_leds() != 0) return -EIO;
 
     // Initialize timers
     k_timer_init(&led_state.blink_timer, blink_handler, NULL);
     k_timer_init(&led_state.rainbow_timer, rainbow_handler, NULL);
     k_timer_init(&led_state.debounce_timer, on_debounce, NULL);
 
-    // Run rainbow effect on boot
-    LOG_INF("Starting rainbow boot effect");
+    // Rainbow boot effect
     k_timer_start(&led_state.rainbow_timer, K_MSEC(RAINBOW_INTERVAL_MS), K_MSEC(RAINBOW_INTERVAL_MS));
-    k_msleep(ARRAY_SIZE(rainbow) * RAINBOW_INTERVAL_MS * 2);
+    k_msleep(ARRAY_SIZE(rainbow_colors) * RAINBOW_INTERVAL_MS * 2); // Sửa thành rainbow_colors
     k_timer_stop(&led_state.rainbow_timer);
 
     // Test all LED colors

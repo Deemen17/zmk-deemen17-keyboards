@@ -14,7 +14,7 @@
 
 / {
     model = "DEKY65";
-    compatible = "DEKY65";
+    compatible = "deemen17,deky65", "nordic,nrf52840";
 
     chosen {
         zephyr,code-partition = &code_partition;
@@ -23,6 +23,7 @@
         zmk,kscan = &kscan0;
         zmk,battery = &vbatt;
         zmk,studio-rpc-uart = &cdc_acm_uart;
+        zephyr,console = &cdc_acm_uart;
     };
 
     vbatt: vbatt {
@@ -106,6 +107,7 @@ zephyr_udc0: &usbd {
     status = "okay";
     cdc_acm_uart: cdc_acm_uart {
         compatible = "zephyr,cdc-acm-uart";
+        status = "okay";
     };
 };
 

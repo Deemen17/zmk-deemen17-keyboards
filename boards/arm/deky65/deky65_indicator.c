@@ -43,7 +43,7 @@ enum led_priority {
 
 /* Timing Constants */
 #define BLINK_INTERVAL_MS  300
-#define RAINBOW_INTERVAL_MS 300
+#define RAINBOW_INTERVAL_MS 400
 #define DEBOUNCE_MS        500
 
 /* Global State */
@@ -70,25 +70,48 @@ static int init_leds(void) {
         return -ENODEV;
     }
 
-    ret |= gpio_pin_configure_dt(&led_r, GPIO_OUTPUT_INACTIVE);
-    ret |= gpio_pin_configure_dt(&led_g, GPIO_OUTPUT_INACTIVE);
-    ret |= gpio_pin_configure_dt(&led_b, GPIO_OUTPUT_INACTIVE);
+    ret |= gpio_pin_configure_dt(&led_r, GPIO_OUTPUT_ACTIVE);   // Thay đổi thành ACTIVE
+    ret |= gpio_pin_configure_dt(&led_g, GPIO_OUTPUT_ACTIVE);
+    ret |= gpio_pin_configure_dt(&led_b, GPIO_OUTPUT_ACTIVE);
     
-    // Start with all LEDs off (active low)
-    gpio_pin_set_dt(&led_r, 0);
-    gpio_pin_set_dt(&led_g, 0);
-    gpio_pin_set_dt(&led_b, 0);
+    // Start with all LEDs off (Common Anode: HIGH = OFF)
+    gpio_pin_set_dt(&led_r, 1);  // Thay đổi thành 1 = OFF
+    gpio_pin_set_dt(&led_g, 1);
+    gpio_pin_set_dt(&led_b, 1);
     
     return ret;
 }
 
 /* LED Control Function */
 static void set_led_color(uint8_t color) {
-    LOG_DBG("Setting LED color: %d", color);
-    gpio_pin_set_dt(&led_r, (color >> 2) & 1);
-    gpio_pin_set_dt(&led_g, (color >> 1) & 1);
-    gpio_pin_set_dt(&led_b, (color >> 0) & 1);
-    LOG_DBG("LED pins set - R:%d G:%d B:%d", (color >> 2) & 1, (color >> 1) & 1, color & 1);
+    const char* color_name;
+    switch(color) {
+        case COLOR_OFF: color_name = "OFF"; break;
+        case COLOR_RED: color_name = "RED"; break;
+        case COLOR_GREEN: color_name = "GREEN"; break;
+        case COLOR_BLUE: color_name = "BLUE"; break;
+        case COLOR_YELLOW: color_name = "YELLOW"; break;
+        case COLOR_CYAN: color_name = "CYAN"; break;
+        case COLOR_PURPLE: color_name = "PURPLE"; break;
+        case COLOR_WHITE: color_name = "WHITE"; break;
+        default: color_name = "UNKNOWN"; break;
+    }
+    
+    bool red = (color >> 2) & 1;
+    bool green = (color >> 1) & 1;
+    bool blue = color & 1;
+    
+    LOG_DBG("LED Color Change:");
+    LOG_DBG("- Color: %s (0b%d%d%d)", color_name, red, green, blue);
+    LOG_DBG("- Setting pins (Common Anode - Active LOW):");
+    
+    gpio_pin_set_dt(&led_r, red);
+    gpio_pin_set_dt(&led_g, green);
+    gpio_pin_set_dt(&led_b, blue);
+    
+    LOG_DBG("  RED:   GPIO=%d (%s)", red, red ? "OFF" : "ON");
+    LOG_DBG("  GREEN: GPIO=%d (%s)", green, green ? "OFF" : "ON");
+    LOG_DBG("  BLUE:  GPIO=%d (%s)", blue, blue ? "OFF" : "ON");
 }
 
 /* Blink Handler */
@@ -135,7 +158,7 @@ static void update_led_state(void) {
         new_priority = PRIO_CAPS_LOCK;
     }
     // Priority 3: Normal Battery
-    else if (led_state.battery_level <= 40) { // Adjusted threshold
+    else if (led_state.battery_level <= 40) { // Thêm dấu ngoặc nhọn
         new_color = (led_state.battery_level <= 25) ? COLOR_YELLOW : COLOR_GREEN;
         new_priority = PRIO_BATTERY;
     }

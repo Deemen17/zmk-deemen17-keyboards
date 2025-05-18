@@ -47,7 +47,8 @@ enum led_priority {
 #define DEBOUNCE_MS        500
 
 /* Config Options */
-#define LED_BLINK_ON_LOW_BATTERY 0  // Set to 0 to disable blinking on low battery
+#define LED_BLINK_ON_LOW_BATTERY 0  // Đã tắt nhấp nháy
+#define BATTERY_LEVEL_UNKNOWN 0    // Đúng giá trị khi không pin
 
 /* Function Declarations */
 static void set_led_color(uint8_t color);
@@ -170,20 +171,20 @@ static void update_led_state(void) {
     uint8_t new_color = COLOR_OFF;
     enum led_priority new_priority = PRIO_IDLE;
 
-    // Priority 1: Critical Battery
-    if (led_state.battery_level <= 10) {
+    // Priority 1: Critical Battery (chỉ khi có pin)
+    if (led_state.battery_level != BATTERY_LEVEL_UNKNOWN && led_state.battery_level <= 10) {
         LOG_DBG("Critical battery level detected");
         new_color = COLOR_RED;
         new_priority = PRIO_CRITICAL;
     }
-    // Priority 2: Caps Lock (WHITE)
+    // Priority 2: Caps Lock
     else if (led_state.caps_lock) {
         LOG_DBG("Caps Lock active - LED ON WHITE");
         new_color = COLOR_WHITE;  // 0b000 = R,G,B đều ON
         new_priority = PRIO_CAPS_LOCK;
     }
-    // Priority 3: Normal Battery
-    else if (led_state.battery_level <= 40) {
+    // Priority 3: Normal Battery (chỉ khi có pin)
+    else if (led_state.battery_level != BATTERY_LEVEL_UNKNOWN && led_state.battery_level <= 40) {
         LOG_DBG("Normal battery level: %d%%", led_state.battery_level);
         new_color = (led_state.battery_level <= 25) ? COLOR_YELLOW : COLOR_GREEN;
         new_priority = PRIO_BATTERY;
@@ -248,11 +249,20 @@ static int on_caps_lock(const zmk_event_t *eh) {
 static int on_battery(const zmk_event_t *eh) {
     const struct zmk_battery_state_changed *ev = as_zmk_battery_state_changed(eh);
     if (ev) {
-        LOG_DBG("Battery event - New level: %d%%", ev->state_of_charge);
-    }
-    if (ev && ev->state_of_charge != led_state.battery_level) {
-        led_state.battery_level = ev->state_of_charge;
+        LOG_DBG("============ BATTERY EVENT ============");
+        LOG_DBG("Previous state: %s", 
+                (led_state.battery_level == BATTERY_LEVEL_UNKNOWN) ? "No battery" : "Battery present");
+        LOG_DBG("New level: %d%%", ev->state_of_charge);
+        
+        // Cập nhật trạng thái pin
+        if (ev->state_of_charge > 0) {
+            led_state.battery_level = ev->state_of_charge;
+        } else {
+            led_state.battery_level = BATTERY_LEVEL_UNKNOWN;
+        }
+        
         k_timer_start(&led_state.debounce_timer, K_MSEC(DEBOUNCE_MS), K_NO_WAIT);
+        LOG_DBG("======================================");
     }
     return ZMK_EV_EVENT_BUBBLE;
 }
@@ -304,8 +314,12 @@ static int led_init(const struct device *dev) {
     k_timer_stop(&led_state.rainbow_timer);
     k_timer_stop(&led_state.debounce_timer);
 
-    // Get initial states before any effects
-    led_state.battery_level = zmk_battery_state_of_charge();
+    // Khởi tạo giá trị pin
+    uint8_t initial_battery = zmk_battery_state_of_charge();
+    led_state.battery_level = (initial_battery > 0) ? initial_battery : BATTERY_LEVEL_UNKNOWN;
+    LOG_DBG("Initial battery state: %s", 
+            (led_state.battery_level == BATTERY_LEVEL_UNKNOWN) ? "No battery" : "Battery present");
+
     led_state.ble_connected = zmk_ble_active_profile_is_connected();
     led_state.ble_open = zmk_ble_active_profile_is_open();
     led_state.caps_lock = zmk_hid_indicators_get_current_profile() & (1 << (HID_USAGE_LED_CAPS_LOCK - 1));

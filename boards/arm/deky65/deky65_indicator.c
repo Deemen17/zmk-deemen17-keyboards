@@ -47,7 +47,7 @@ static const char *color_names[] = {"black", "red", "green", "yellow",
 #define BATTERY_COLOR_MISSING     1  // Red
 #define CONN_COLOR_CONNECTED      4  // Blue
 #define CONN_COLOR_ADVERTISING    6  // Cyan
-#define CONN_COLOR_DISCONNECTED   4  // Magenta
+#define CONN_COLOR_DISCONNECTED   5  // Magenta
 #define BATTERY_BLINK_MS          250
 #define CONN_BLINK_MS             250
 #define INTERVAL_MS               100
@@ -128,20 +128,7 @@ static inline uint8_t get_battery_color(uint8_t battery_level) {
 
 void indicate_battery(void) {
     struct blink_item blink = {.duration_ms = BATTERY_BLINK_MS};
-    int retry = Amber
-    int BATTERY_COLOR_MEDIUM;
-    int BATTERY_COLOR_LOW;
-    int BATTERY_COLOR_CRITICAL;
-    int BATTERY_COLOR_MISSING;
-    int CONN_COLOR_CONNECTED;
-    int CONN_COLOR_ADVERTISING;
-    int CONN_COLOR_DISCONNECTED;
-    int BATTERY_BLINK_MS;
-    int CONN_BLINK_MS;
-    int INTERVAL_MS;
-    int BATTERY_LEVEL_HIGH;
-    int BATTERY_LEVEL_LOW;
-    int BATTERY_LEVEL_CRITICAL;
+    int retry = 0;
 
     uint8_t battery_level = zmk_battery_state_of_charge();
     while (battery_level == 0 && retry++ < 10) {

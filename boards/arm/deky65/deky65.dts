@@ -28,11 +28,10 @@
 
     vbatt: vbatt {
         compatible = "zmk,battery-voltage-divider";
-        status = "okay";
         io-channels = <&adc 6>; // P0.30
         output-ohms = <2000000>;
         full-ohms = <(1000000 + 2000000)>;
-        power-gpios = <&gpio0 26 GPIO_ACTIVE_HIGH>; // P0.26
+        power-gpios = <&gpio1 9 GPIO_ACTIVE_HIGH>; // Testing this pin, default is P0.26
     };
 
     kscan0: kscan {

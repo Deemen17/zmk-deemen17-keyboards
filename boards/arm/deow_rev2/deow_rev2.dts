@@ -24,7 +24,6 @@
         zmk,underglow = &led_strip;
         zmk,battery = &vbatt;
         zmk,studio-rpc-uart = &cdc_acm_uart;
-        zephyr,console = &cdc_acm_uart;
     };
 
     vbatt: vbatt {
@@ -95,6 +94,10 @@
             gpios = <&gpio1 13 (GPIO_ACTIVE_LOW)>;
         };
     };
+};
+
+&uart0 {
+    status = "disabled";
 };
 
 &gpio0 {

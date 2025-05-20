@@ -37,8 +37,8 @@ CONFIG_ZMK_RGB_UNDERGLOW_ON_START=y
 CONFIG_ZMK_RGB_UNDERGLOW_EFF_START=3
 
 # Turn on logging, and set ZMK logging to debug output
-CONFIG_ZMK_USB_LOGGING=y
-CONFIG_SENSOR_LOG_LEVEL_DBG=y
+# CONFIG_ZMK_USB_LOGGING=y
+# CONFIG_SENSOR_LOG_LEVEL_DBG=y
 
 # Power Management Configuration
 # Milliseconds of inactivity before entering idle state	- 10 minutes

@@ -17,9 +17,9 @@
 #     artifact-name: corne_left_with_logging
 #
 ---
-board: ["deky65"]
+board: ["deow_rev2"]
 include:
-  - board: deky65
+  - board: deow_rev2
     snippet: studio-rpc-usb-uart
-    artifact-name: deemen17_deky65_studio
+    artifact-name: deemen17_deow_rev2_studio
     cmake-args: -DCONFIG_ZMK_STUDIO=y

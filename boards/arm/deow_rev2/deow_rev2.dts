@@ -24,6 +24,7 @@
         zmk,underglow = &led_strip;
         zmk,battery = &vbatt;
         zmk,studio-rpc-uart = &cdc_acm_uart;
+        zephyr,console = &cdc_acm_uart;
     };
 
     vbatt: vbatt {
@@ -36,6 +37,7 @@
 
     kscan0: kscan {
         compatible = "zmk,kscan-gpio-matrix";
+        debounce-period = <15>;
         wakeup-source;
         diode-direction = "col2row";
         row-gpios
@@ -62,6 +64,13 @@
             , <&gpio1 10 GPIO_ACTIVE_HIGH>
             , <&gpio1 11 GPIO_ACTIVE_HIGH>
             ;
+
+        debounce {
+            debounce-type = "filtered";
+            debounce-filter-width-ms = <15>;
+            debounce-press-ms = <15>;
+            debounce-release-ms = <15>;
+        };
     };
 
     ext-power {

@@ -62,6 +62,13 @@
             , <&gpio0 17 GPIO_ACTIVE_HIGH>
             , <&gpio0 15 GPIO_ACTIVE_HIGH>
             ;
+            
+        debounce {
+            debounce-type = "filtered";
+            debounce-filter-width-ms = <10>;
+            debounce-press-ms = <10>;
+            debounce-release-ms = <10>;
+        };
     };
 
     aliases {

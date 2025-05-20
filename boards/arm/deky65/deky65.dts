@@ -36,6 +36,7 @@
 
     kscan0: kscan {
         compatible = "zmk,kscan-gpio-matrix";
+        debounce-period = <15>;
         wakeup-source;
         diode-direction = "col2row";
         row-gpios
@@ -65,9 +66,9 @@
             
         debounce {
             debounce-type = "filtered";
-            debounce-filter-width-ms = <10>;
-            debounce-press-ms = <10>;
-            debounce-release-ms = <10>;
+            debounce-filter-width-ms = <15>;
+            debounce-press-ms = <15>;
+            debounce-release-ms = <15>;
         };
     };
 

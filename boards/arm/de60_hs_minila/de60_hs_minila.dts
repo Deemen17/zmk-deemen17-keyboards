@@ -15,9 +15,9 @@
 #include "de60_hs_minila-transforms.dtsi"
 
 / {
-    model = "de60_hs_minila";
-    compatible = "deemen17,de60_hs_minila";
-
+    model = "DE60 HS Minila";
+    compatible = "deemen17","de60_hs_minila";
+    
     chosen {
         zephyr,code-partition = &code_partition;
         zephyr,sram = &sram0;

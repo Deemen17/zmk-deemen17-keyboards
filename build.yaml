@@ -23,8 +23,8 @@ include:
     snippet: studio-rpc-usb-uart
     artifact-name: deemen17_deky65_studio
     cmake-args: -DCONFIG_ZMK_STUDIO=y
-  - board: de60_hs_minila
-    snippet: studio-rpc-usb-uart
-    artifact-name: deemen17_de60_hs_minila_studio
-    cmake-args: -DCONFIG_ZMK_STUDIO=y
+  # - board: de60_hs_minila
+  #   snippet: studio-rpc-usb-uart
+  #   artifact-name: deemen17_de60_hs_minila_studio
+  #   cmake-args: -DCONFIG_ZMK_STUDIO=y
   

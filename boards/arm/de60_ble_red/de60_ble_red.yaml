@@ -1,0 +1,13 @@
+identifier: de60_ble_red
+name: de60_ble_red
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+supported:
+  - adc
+  - usb_device
+  - ble
+  - watchdog
+snippet: studio-rpc-usb-uart

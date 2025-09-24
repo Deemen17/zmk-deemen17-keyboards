@@ -1,125 +1,121 @@
 /*
- * Copyright (c) 2024 Deemen17 Works
+ * Copyright (c) 2025 Deemen17 Works
  *
  * SPDX-License-Identifier: MIT
  */
 
 /dts-v1/;
 #include <nordic/nrf52840_qiaa.dtsi>
-
 #include <dt-bindings/led/led.h>
-#include <dt-bindings/zmk/matrix_transform.h>
 
-#include "de60_hs_minila-pinctrl.dtsi"
-#include "de60_hs_minila-layouts.dtsi"
-#include "de60_hs_minila-transforms.dtsi"
+#include "de60_ble_red-pinctrl.dtsi"
+#include "de60_ble_red-layouts.dtsi"
+#include "de60_ble_red-transforms.dtsi"
 
 / {
-    model = "DE60 HS Minila";
-    compatible = "deemen17","de60_hs_minila";
-    
+    model = "DE60_BLE_RED";
+    compatible = "deemen17,de60", "nordic,nrf52840";
+
     chosen {
         zephyr,code-partition = &code_partition;
         zephyr,sram = &sram0;
         zephyr,flash = &flash0;
-        zmk,battery = &vbatt;
         zmk,kscan = &kscan0;
+        zmk,battery = &vbatt;
         zmk,underglow = &led_strip;
-        zmk,physical-layout = &de60_minila_split_bs;
-        zephyr,console = &cdc_acm_uart;
+        zmk,studio-rpc-uart = &cdc_acm_uart;
+        // zephyr,console = &cdc_acm_uart;
+    };
+
+    vbatt: vbatt {
+        compatible = "zmk,battery-voltage-divider";
+        io-channels = <&adc 1>; // P0.30
+        output-ohms = <2000000>;
+        full-ohms = <(1000000 + 2000000)>;
     };
 
     kscan0: kscan {
         compatible = "zmk,kscan-gpio-matrix";
         wakeup-source;
-        label = "KSCAN";
-
         diode-direction = "col2row";
         row-gpios
-            = <&gpio0 4  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            = <&gpio0 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&gpio0 17 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&gpio0 20 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
             , <&gpio0 12 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
-            , <&gpio0 7  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
-            , <&gpio1 0  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
-            , <&gpio0 24 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&gpio1 6  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
             ;
         col-gpios
-            = <&gpio1 6  GPIO_ACTIVE_HIGH>
+            = <&gpio0 26 GPIO_ACTIVE_HIGH>
+            , <&gpio0 6  GPIO_ACTIVE_HIGH>
+            , <&gpio0 30 GPIO_ACTIVE_HIGH>
+            , <&gpio0 31 GPIO_ACTIVE_HIGH>
+            , <&gpio0 29 GPIO_ACTIVE_HIGH>
+            , <&gpio0 2  GPIO_ACTIVE_HIGH>
+            , <&gpio1 13 GPIO_ACTIVE_HIGH>
+            , <&gpio0 28 GPIO_ACTIVE_HIGH>
+            , <&gpio0 8  GPIO_ACTIVE_HIGH>
+            , <&gpio0 7  GPIO_ACTIVE_HIGH>
             , <&gpio1 4  GPIO_ACTIVE_HIGH>
             , <&gpio1 2  GPIO_ACTIVE_HIGH>
-            , <&gpio1 11 GPIO_ACTIVE_HIGH>
-            , <&gpio1 10 GPIO_ACTIVE_HIGH>
-            , <&gpio0 3  GPIO_ACTIVE_HIGH>
-            , <&gpio0 28 GPIO_ACTIVE_HIGH>
-            , <&gpio1 13 GPIO_ACTIVE_HIGH>
-            , <&gpio0 2  GPIO_ACTIVE_HIGH>
-            , <&gpio0 29 GPIO_ACTIVE_HIGH>
-            , <&gpio0 31 GPIO_ACTIVE_HIGH>
-            , <&gpio0 30 GPIO_ACTIVE_HIGH>
-            , <&gpio0 20 GPIO_ACTIVE_HIGH>
+            , <&gpio1 0  GPIO_ACTIVE_HIGH>
             , <&gpio0 22 GPIO_ACTIVE_HIGH>
             ;
     };
 
-    aliases {
-		led-caps = &gpio_led_caps;
-		led-usb = &gpio_led_usb;
-		led-ble-0 = &gpio_led_ble_0;
-        led-ble-1 = &gpio_led_ble_1;
-        led-ble-2 = &gpio_led_ble_2;
+
+/* --- Wakeup after Soft-off using space key --- */    
+    keys {
+        compatible = "gpio-keys";
+        soft_off_gpio_key: soft_off_gpio_key {
+            gpios = <&gpio1 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; // row4
+        };
     };
+
+    wakeup_scan: wakeup_scan {
+        compatible = "zmk,gpio-key-wakeup-trigger";
+        trigger = <&soft_off_gpio_key>;
+        wakeup-source;
+        extra-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>; // col6
+    };
+
+    soft_off_wakers {
+        compatible = "zmk,soft-off-wakeup-sources";
+        wakeup-sources = <&wakeup_scan>;
+    };
+
+    aliases {
+        led-red   = &led_0;
+		led-green = &led_1;
+		led-blue  = &led_2;
+	};
 
     leds {
         compatible = "gpio-leds";
         status = "okay";
-        gpio_led_caps: led_caps {
-            gpios = <&gpio0 5 (GPIO_ACTIVE_HIGH)>;
-            label = "LED CAPS LOCK";
+
+        led_0: led_red { 
+            gpios = <&gpio0 5  GPIO_ACTIVE_LOW>;
+            label = "Red LED";
         };
-        gpio_led_ble_0: led_ble_0 {
-            gpios = <&gpio0 26 (GPIO_ACTIVE_HIGH)>;
-            label = "LED BLE 0";
+
+        led_1: led_green { 
+            gpios = <&gpio0 4  GPIO_ACTIVE_LOW>;
+            label = "Green LED"; 
         };
-        gpio_led_ble_1: led_ble_1 {
-            gpios = <&gpio0 6 (GPIO_ACTIVE_HIGH)>;
-            label = "LED BLE 1";
-        };
-        gpio_led_ble_2: led_ble_2 {
-            gpios = <&gpio0 8 (GPIO_ACTIVE_HIGH)>;
-            label = "LED BLE 1";
-        };
-        gpio_led_usb: led_usb {
-            gpios = <&gpio1 9 (GPIO_ACTIVE_HIGH)>;
-            label = "LED USB";
+        
+        led_2: led_blue { 
+            gpios = <&gpio1 9  GPIO_ACTIVE_LOW>;
+            label = "Blue LED";
         };
     };
 
     ext-power {
         compatible = "zmk,ext-power-generic";
         label = "EXT_POWER";
-        control-gpios = <&gpio0 15 GPIO_ACTIVE_HIGH>;
+        control-gpios = <&gpio1 10 GPIO_ACTIVE_HIGH>;
     };
 
-    vbatt: vbatt {
-        compatible = "zmk,battery-nrf-vddh";
-        label = "BATTERY";
-    };
-
-};
-
-&adc {
-    status = "okay";
-};
-
-&gpiote {
-    status = "okay";
-};
-
-&gpio0 {
-    status = "okay";
-};
-
-&gpio1 {
-    status = "okay";
 };
 
 &spi3 {
@@ -139,11 +135,23 @@
         spi-max-frequency = <4000000>;
 
         /* WS2812 */
-        chain-length = <18>; /* LED strip length */
+        chain-length = <26>; /* LED strip length */
         spi-one-frame = <0x70>;
         spi-zero-frame = <0x40>;
         color-mapping = <LED_COLOR_ID_GREEN LED_COLOR_ID_RED LED_COLOR_ID_BLUE>;
     };
+};
+
+&gpio0 {
+    status = "okay";
+};
+
+&gpio1 {
+    status = "okay";
+};
+
+&adc {
+    status = "okay";
 };
 
 zephyr_udc0: &usbd {

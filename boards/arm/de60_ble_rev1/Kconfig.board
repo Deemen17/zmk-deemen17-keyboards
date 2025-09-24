@@ -1,0 +1,6 @@
+# Copyright (c) 2025 Deemen17 Works
+# SPDX-License-Identifier: MIT
+
+config BOARD_DE60_BLE_REV1
+    bool "de60_ble_rev1"
+    depends on SOC_NRF52840_QIAA

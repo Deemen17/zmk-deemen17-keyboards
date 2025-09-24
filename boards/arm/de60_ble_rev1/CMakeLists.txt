@@ -1,0 +1,1 @@
+target_sources(app PRIVATE de60_ble_rev1_buzzer.c)

@@ -1,0 +1,121 @@
+/*
+ * Copyright (c) 2025 Deemen17 Works
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/ext_power.h>
+#include <dt-bindings/zmk/rgb.h>
+#include <dt-bindings/zmk/outputs.h>
+
+#include <behaviors/rgbled_widget.dtsi>
+
+#define BT0 BT_SEL 0
+#define BT1 BT_SEL 1
+#define BT2 BT_SEL 2
+#define BTC BT_CLR 
+
+#define OUTUSB &out OUT_USB
+#define OUTBLE &out OUT_BLE
+// #define OUTESB &out OUT_ESB  // Future custom ESB endpoint
+// ESB switching: OUTUSB → OUTBLE → OUTESB
+
+#define SOOFF &soft_off
+
+#define UGTOG &rgb_ug RGB_TOG
+#define UGBRD &rgb_ug RGB_BRD
+#define UGBRI &rgb_ug RGB_BRI
+#define UGHUD &rgb_ug RGB_HUD
+#define UGHUI &rgb_ug RGB_HUI
+#define UGSAI &rgb_ug RGB_SAI
+#define UGSAD &rgb_ug RGB_SAD
+#define UGSPI &rgb_ug RGB_SPI
+#define UGSPD &rgb_ug RGB_SPD
+#define UGEFF &rgb_ug RGB_EFF
+#define UGEFR &rgb_ug RGB_EFR
+
+#define VOLUP &kp C_VOL_UP
+#define VOLDN &kp C_VOL_DN
+
+#define RESET &sys_reset
+#define BOTLR &bootloader
+
+#define FUN_CLCK &lt FUN CAPS
+
+#define WIN 0
+#define MAC 1
+#define FUN 2
+#define EXT 3
+
+&mt {
+    tapping-term-ms = <200>; 
+};
+
+&soft_off {
+    hold-time-ms = <2000>; // Only turn off it the key is held for 2 seconds or longer.
+};
+
+
+/ {
+
+    behaviors {
+        td_rshift_up: tap_dance_rshift_up {
+            compatible = "zmk,behavior-tap-dance";
+            #binding-cells = <0>;
+            tapping-term-ms = <200>;
+            bindings = <&kp UP>, <&mt RSHFT UP>;
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+
+        base {
+            label = "Windows";
+            bindings = <
+&kp ESC   &kp N1   &kp N2  &kp N3  &kp N4  &kp N5  &kp N6  &kp N7  &kp N8  &kp N9    &kp N0   &kp MINUS &kp EQUAL &kp BSLH  &kp DEL 
+&kp TAB   &kp Q    &kp W   &kp E   &kp R   &kp T   &kp Y   &kp U   &kp I   &kp O     &kp P    &kp LBKT  &kp RBKT  &kp BSPC  
+FUN_CLCK  &kp A    &kp S   &kp D   &kp F   &kp G   &kp H   &kp J   &kp K   &kp L     &kp SEMI &kp SQT             &kp ENTER 
+&kp LSHFT &kp NUBS &kp Z   &kp X   &kp C   &kp V   &kp B   &kp N   &kp M   &kp COMMA &kp DOT  &kp FSLH  &td_rshift_up &mo FUN
+&kp LCTRL &kp LGUI &kp LALT                        &kp SPACE               &kp RGUI  &mo FUN  &kp LEFT  &kp DOWN  &kp RIGHT
+            >;
+        };
+
+        layer_mac {
+            label = "Mac";
+            bindings = < 
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &kp LALT &kp LGUI                      &trans                  &trans  &trans  &trans  &trans  &trans
+            >;
+        };
+
+        layer_function {
+            label = "Function";
+            bindings = <
+&kp GRAVE  &kp F1  &kp F2  &kp F3  &kp F4  &kp F5  &kp F6  &kp F7 &kp F8  &kp F9  &kp F10 &kp F11 &kp F12 &kp F13 &kp F14
+&ind_con   &bt BT0 &bt BT1 &bt BT2 &trans  &trans  UGHUD   UGHUI  UGSAD   UGSAI   UGSPD   UGSPI   UGEFR   UGEFF
+&trans     &trans  SOOFF   &trans  &trans  &trans  &trans  &trans &trans  UGTOG   RESET   BOTLR           &trans
+&ind_bat   &trans  &trans  &bt BTC &trans  &trans  OUTBLE  OUTUSB &trans  UGBRD   UGBRI   &trans  VOLUP   &trans
+&trans     &to WIN &to MAC                         &kp C_PP               &trans  &trans  &trans  VOLDN   &trans
+            >;
+        };
+
+        layer_extra {
+            label = "Extra";
+            bindings = < 
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans                         &trans                  &trans  &trans  &trans  &trans  &trans
+            >;
+        };
+    };
+
+};

@@ -1,0 +1,54 @@
+/*
+ * Copyright (c) 2022 The ZMK Contributors
+ * SPDX-License-Identifier: MIT
+ */
+
+
+&pinctrl {
+    spi3_default: spi3_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 0, 24)>;
+        };
+    };
+    
+    spi3_sleep: spi3_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 0, 24)>;
+            low-power-enable;
+        };
+    };
+
+    pwm0_default: pwm0_default {
+        group1 {
+            psels = <NRF_PSEL(PWM_OUT0, 0, 29)>,   /* LED R */
+                    <NRF_PSEL(PWM_OUT1, 0, 31)>,   /* LED G */
+                    <NRF_PSEL(PWM_OUT2, 0, 30)>,   /* LED B */
+                    <NRF_PSEL(PWM_OUT3, 1, 0)>;    /* Buzzer */
+        };
+    };
+
+    pwm0_sleep: pwm0_sleep {
+        group1 {
+            psels = <NRF_PSEL(PWM_OUT0, 0, 29)>,
+                    <NRF_PSEL(PWM_OUT1, 0, 31)>,
+                    <NRF_PSEL(PWM_OUT2, 0, 30)>,
+                    <NRF_PSEL(PWM_OUT3, 1, 0)>;
+            low-power-enable;
+        };
+    };
+
+    i2c0_default: i2c0_default {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 1, 13)>,
+                    <NRF_PSEL(TWIM_SCL, 0,  2)>;
+        };
+    };
+
+    i2c0_sleep: i2c0_sleep {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 1, 13)>,
+                    <NRF_PSEL(TWIM_SCL, 0,  2)>;
+            low-power-enable;
+        };
+    };
+};
